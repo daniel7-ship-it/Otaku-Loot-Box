@@ -17,4 +17,5 @@ export const catalog = new Map([
   [14, { name: 'Valorant Champions Karambit', amount: 2999 }],
   [15, { name: 'Re:Zero Rem & Emilia Figure', amount: 6990 }],
   [16, { name: 'Gojo & Geto Sitting Figures', amount: 3555 }],
+  [17, { name: 'Hunter x Hunter Vibration Stars Gon', amount: 2429 }],
 ]);
