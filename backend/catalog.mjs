@@ -18,4 +18,5 @@ export const catalog = new Map([
   [15, { name: 'Re:Zero Rem & Emilia Figure', amount: 6990 }],
   [16, { name: 'Gojo & Geto Sitting Figures', amount: 3555 }],
   [17, { name: 'Pirate Crew Plushies', amount: 3699 }],
+  [18, { name: 'Power Sitting Plush', amount: 2499 }],
 ]);
