@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual, randomUUID } from 'node:crypto';
 import { mkdir, writeFile, link, unlink, readdir, readFile } from 'node:fs/promises';
 import { join, isAbsolute } from 'node:path';
 import { HttpError, assertTestSession } from './checkout.mjs';
+import { catalog } from './catalog.mjs';
 
 export function verifySignature(raw, header, secret, now = Date.now()) {
   const parts = String(header || '').split(',');
@@ -15,6 +16,7 @@ export function verifySignature(raw, header, secret, now = Date.now()) {
 export function orderStore(directory) {
   if (!isAbsolute(directory)) throw new Error('ORDER_DATA_DIR must be an absolute private persistent directory.');
   return {
+    directory,
     async save(order) {
       if (!/^cs_test_[A-Za-z0-9]+$/.test(order.id)) throw new Error('Invalid order ID');
       await mkdir(directory, { recursive: true, mode: 0o700 });
@@ -30,7 +32,12 @@ export function orderStore(directory) {
     async list() {
       await mkdir(directory, { recursive: true, mode: 0o700 });
       const names = (await readdir(directory)).filter(n => /^cs_test_[A-Za-z0-9]+\.json$/.test(n));
-      return Promise.all(names.sort().slice(-100).map(n => readFile(join(directory, n), 'utf8').then(JSON.parse)));
+      return Promise.all(names.sort().map(n => readFile(join(directory, n), 'utf8').then(JSON.parse)));
+    },
+    async get(id) {
+      if (!/^cs_test_[A-Za-z0-9]{1,200}$/.test(id || '')) return null;
+      try { return JSON.parse(await readFile(join(directory, `${id}.json`), 'utf8')); }
+      catch (error) { if (error.code === 'ENOENT') return null; throw error; }
     }
   };
 }
@@ -48,10 +55,10 @@ export async function captureOrder(event, stripe, store) {
   do {
     const page = await stripe(`/checkout/sessions/${id}/line_items?limit=100&expand[]=data.price.product${after ? `&starting_after=${encodeURIComponent(after)}` : ''}`);
     if (!Array.isArray(page.data) || (page.has_more && !page.data.length)) throw new Error('Invalid line items');
-    items.push(...page.data.map(item => ({ catalogId: item.price?.product?.metadata?.catalog_id || null, name: item.description, quantity: item.quantity, amountTotal: item.amount_total, currency: item.currency })));
+    items.push(...page.data.map(item => { const catalogId = item.price?.product?.metadata?.catalog_id || null; return { catalogId, name: item.description, quantity: item.quantity, amountTotal: item.amount_total, currency: item.currency, originLink: catalog.get(Number(catalogId))?.origin || null }; }));
     after = page.has_more ? page.data.at(-1).id : '';
   } while (after);
-  await store.save({ id, mode: 'test', receivedAt: new Date().toISOString(), status: 'test_order_held', purchasingEnabled: false,
+  await store.save({ id, mode: 'test', receivedAt: new Date().toISOString(), status: 'test_order_held', purchasingEnabled: false, claimedBy: null, supplierPurchase: null, tracking: null,
     fundingStatus: 'not_applicable_test_payment', notificationStatus: 'pending_configuration', items,
     amountTotal: session.amount_total, currency: session.currency,
     shipping: session.collected_information?.shipping_details || session.shipping_details || null,

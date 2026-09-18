@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
 import { verifySignature, captureOrder, orderStore, authorized } from './orders.mjs';
 import { HttpError, validateConfig, createStripeClient, verifySandbox, buildCheckout, checkoutKey, assertTestSession } from './checkout.mjs';
+import { updateOrder, notificationLog, supplierPurchasePlan, claimToken, hashToken, requireClaim, transitionOrder, validateAgentId, validateText } from './fulfillment.mjs';
 
 async function readJson(req) {
   if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) throw new HttpError(415, 'Send JSON.');
@@ -43,6 +44,32 @@ export function createApp({ config, stripe, orders }) {
         if (!authorized(req.headers.authorization, config.agentToken)) throw new HttpError(401, 'Unauthorized.');
         return send(200, { mode: 'test', purchasingEnabled: false, orders: await orders.list() });
       }
+      if (url.pathname.startsWith('/api/orders/') && req.method === 'POST') {
+        if (!orders || !config.agentToken) throw new HttpError(503, 'Order access is not configured.');
+        if (!authorized(req.headers.authorization, config.agentToken)) throw new HttpError(401, 'Unauthorized.');
+        const match = url.pathname.match(/^\/api\/orders\/(cs_test_[A-Za-z0-9]{1,200})\/(claim|purchase-plan|supplier-confirmation|tracking)$/);
+        if (!match) throw new HttpError(404, 'Not found.');
+        const [, id, action] = match; const body = await readJson(req); const log = notificationLog(orders.directory);
+        const current = await orders.get(id); if (!current) throw new HttpError(404, 'Order not found.');
+        if (action === 'claim') {
+          validateAgentId(body.agentId); const token = claimToken(); let conflict = false;
+          const order = await updateOrder(orders.directory, id, old => { if (old.claimedBy || old.status !== 'ready_for_purchase' || old.fundingStatus !== 'available') { conflict = true; return old; } return { ...transitionOrder(old, 'claimed'), claimedBy: body.agentId, claimTokenHash: hashToken(token), claimedAt: new Date().toISOString() }; });
+          if (conflict) throw new HttpError(409, 'Order is already claimed or not ready for purchase.');
+          await log.add({ orderId: id, kind: 'progress', message: `Order claimed by ${body.agentId}` }); return send(200, { order, claimToken: token });
+        }
+        if (action === 'purchase-plan') {
+          requireClaim(current, body.agentId, body.claimToken); const plan = supplierPurchasePlan(current); const order = await updateOrder(orders.directory, id, old => { requireClaim(old, body.agentId, body.claimToken); if (old.status === 'purchase_prepared') return old; return { ...transitionOrder(old, 'purchase_prepared'), supplierPurchase: { ...plan, preparedBy: body.agentId, preparedAt: new Date().toISOString() } }; });
+          await log.add({ orderId: id, kind: 'progress', message: 'Supplier purchase dry-run prepared; no payment submitted.' }); return send(200, { order, plan });
+        }
+        if (action === 'supplier-confirmation') {
+          requireClaim(current, body.agentId, body.claimToken); validateText(body.confirmationId, 'confirmationId');
+          const order = await updateOrder(orders.directory, id, old => { requireClaim(old, body.agentId, body.claimToken); if (old.status === 'supplier_confirmed') return old; return { ...transitionOrder(old, 'supplier_confirmed'), supplierPurchase: { ...(old.supplierPurchase || {}), confirmationId: body.confirmationId, confirmedAt: new Date().toISOString() } }; });
+          await log.add({ orderId: id, kind: 'progress', message: 'Supplier confirmation recorded.' }); return send(200, { order });
+        }
+        requireClaim(current, body.agentId, body.claimToken); validateText(body.carrier, 'carrier'); validateText(body.trackingNumber, 'trackingNumber');
+        const order = await updateOrder(orders.directory, id, old => { requireClaim(old, body.agentId, body.claimToken); if (old.status === 'tracking_recorded') return old; return { ...transitionOrder(old, 'tracking_recorded'), tracking: { carrier: body.carrier, trackingNumber: body.trackingNumber, recordedAt: new Date().toISOString() } }; });
+        await log.add({ orderId: id, kind: 'progress', message: 'Tracking recorded.' }); return send(200, { order });
+      }
       if (url.pathname === '/health' && req.method === 'GET') return send(200, { mode: 'test', fulfillment: 'disabled' });
       if (req.headers.origin !== config.origin) throw new HttpError(403, 'Storefront origin is not allowed.');
       res.setHeader('Access-Control-Allow-Origin', config.origin);
@@ -79,7 +106,8 @@ export function createApp({ config, stripe, orders }) {
       }
       throw new HttpError(404, 'Not found.');
     } catch (error) {
-      send(error instanceof HttpError ? error.status : 500,
+      const status = error instanceof HttpError ? error.status : error.code === 'UNAUTHORIZED_CLAIM' ? 401 : error.code === 'INVALID_INPUT' || error.code === 'INVALID_TRANSITION' ? 409 : 500;
+      send(status,
         { error: error instanceof HttpError ? error.message : 'Checkout is unavailable. Please try again.' });
     }
   });
