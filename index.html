@@ -1,4 +1,4 @@
-products<!DOCTYPE html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -199,14 +199,16 @@ products<!DOCTYPE html><!DOCTYPE html>
     <div id="cartItems" class="flex-1 overflow-y-auto p-6"></div>
     <div class="p-6 border-t border-[#ded9cd]">
       <div class="flex justify-between font-semibold"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
-      <p class="text-xs text-[#7d8273] mt-2">Shipping and taxes are not calculated in this demo.</p>
-      <button id="checkout" class="w-full bg-[#2d4433] text-white py-4 mt-5 font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed">Review your loot →</button>
-      <p id="checkoutMessage" role="status" class="text-xs leading-5 mt-3 text-[#727866]">Demo cart. Payments and live inventory are not connected.</p>
+      <p class="text-xs text-[#7d8273] mt-2">Test checkout · Worldwide supported shipping addresses collected. No shipping charge or tax in this test. No items will be shipped.</p>
+      <button id="checkout" class="w-full bg-[#2d4433] text-white py-4 mt-5 font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed">Test checkout →</button>
+      <p id="checkoutMessage" role="status" class="text-xs leading-5 mt-3 text-[#727866]">Sandbox only. No real payments or supplier orders.</p>
     </div>
   </section>
 
   <div id="toast" role="status" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#293d31] text-white shadow-xl px-5 py-3 text-sm z-[60] rounded-sm pointer-events-none opacity-0 transition-opacity w-max max-w-[90vw]"></div>
 
+  <script src="checkout-config.js"></script>
+  <script src="checkout-client.js"></script>
   <script>
     const catalog = [
       {
@@ -327,8 +329,8 @@ products<!DOCTYPE html><!DOCTYPE html>
     function renderCart(){
       $("cartCount").textContent=cart.reduce((sum,i)=>sum+i.qty,0);
       $("subtotal").textContent=money(cart.reduce((sum,i)=>sum+catalog.find(p=>p.id===i.id).price*i.qty,0));
-      $("checkout").disabled=cart.length===0;
-      $("checkoutMessage").textContent="Demo cart. Payments and live inventory are not connected.";
+      $("checkout").disabled=cart.length===0 || window.otakuCheckout.busy;
+      if (!window.otakuCheckout.busy) $("checkoutMessage").textContent="Sandbox only. No real payments or supplier orders.";
       $("cartItems").innerHTML=cart.length?cart.map(item=>{
         const p=catalog.find(p=>p.id===item.id);
         return `<div class="flex gap-4 pb-6 mb-6 border-b border-[#e5e0d4]">
@@ -407,9 +409,11 @@ products<!DOCTYPE html><!DOCTYPE html>
     $("cartOpen").onclick=openCart;
     $("cartClose").onclick=closeCart;
     $("cartOverlay").onclick=closeCart;
-    $("checkout").onclick=()=>{
-      $("checkoutMessage").textContent=`Your ${cart.reduce((s,i)=>s+i.qty,0)} items total ${$("subtotal").textContent} before shipping and tax. This is a storefront demo; connect a checkout provider and verified inventory to accept orders. No order has been placed.`;
-    };
+    $("checkout").onclick=()=>window.otakuCheckout.begin(cart);
+    window.addEventListener("pageshow", () => {
+      window.otakuCheckout.reset();
+      $("checkout").disabled=cart.length===0;
+    });
     document.addEventListener("keydown",e=>{
       if(!$("cartPanel").classList.contains("open"))return;
       if(e.key==="Escape")closeCart();
@@ -422,6 +426,7 @@ products<!DOCTYPE html><!DOCTYPE html>
     });
     $("year").textContent=new Date().getFullYear();
     renderCategories();renderProducts();renderCart();
+    window.otakuCheckout.checkReturn(openCart);
   </script>
 
   <style>
