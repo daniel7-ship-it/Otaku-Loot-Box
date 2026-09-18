@@ -76,6 +76,7 @@
         <a href="#shop" data-nav-category="Manga" class="hover:text-[#9c742a]">Manga</a>
         <a href="#shop" data-nav-category="Comics" class="hover:text-[#9c742a]">Comics</a>
         <a href="#shop" data-nav-category="Figures" class="hover:text-[#9c742a]">Figures & collectibles</a>
+        <a href="#shop" data-nav-category="Plushies" class="hover:text-[#9c742a]">Plushies</a>
       </nav>
       <div class="flex items-center gap-5">
         <button id="searchShortcut" aria-label="Search the store" class="p-2"><svg class="w-5 h-5"><use href="#i-search"/></svg></button>
@@ -169,8 +170,8 @@
             <button id="nextPage" type="button" class="border border-[#d9d6c9] px-4 py-2 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#f5d65d] hover:border-[#f5d65d]">Next →</button>
           </nav>
           <div id="emptyResults" hidden class="py-20 text-center">
-            <h3 class="display text-3xl">No loot on this shelf.</h3>
-            <p class="text-sm text-[#787d70] mt-2">Try another title or reset your filters.</p>
+            <h3 id="emptyTitle" class="display text-3xl">No loot on this shelf.</h3>
+            <p id="emptyCopy" class="text-sm text-[#787d70] mt-2">Try another title or reset your filters.</p>
             <button id="emptyReset" class="mt-5 underline text-sm">Show all products</button>
           </div>
           <p class="text-[11px] text-[#898b7e] mt-9">Concept storefront · Sample prices and illustrated product placeholders.</p>
@@ -403,7 +404,7 @@
     }
 
     function renderCategories(){
-      $("categories").innerHTML=["All loot","Manga","Comics","Figures","Accessories"].map(c=>`
+      $("categories").innerHTML=["All loot","Manga","Comics","Figures","Plushies","Accessories"].map(c=>`
         <button data-category="${c}" aria-pressed="${category===c}" class="filter-btn ${category===c?"active":""} shrink-0 w-auto lg:w-full flex items-center justify-between gap-5 px-3 py-3 text-xs rounded-sm hover:bg-[#eee6d7] transition">
           <span>${c}</span><span class="filter-count bg-[#ece9df] px-1.5 py-0.5 rounded text-[10px]">${c==="All loot"?catalog.length:catalog.filter(p=>p.category===c).length}</span>
         </button>`).join("");
@@ -421,6 +422,9 @@
       const pageItems=items.slice(start,start+PAGE_SIZE);
       $("resultCount").textContent=`${items.length} finds`;
       $("emptyResults").hidden=items.length>0;
+      const isPlushiesShelf=category==="Plushies"&&!query&&Number($("price").value)===100;
+      $("emptyTitle").textContent=isPlushiesShelf?"Plushies are coming soon.":"No loot on this shelf.";
+      $("emptyCopy").textContent=isPlushiesShelf?"We’re picking the first soft additions for the collection. Check back soon.":"Try another title or reset your filters.";
       $("pagination").hidden=items.length<=PAGE_SIZE;
       $("pageStatus").textContent=items.length?`Page ${catalogPage} of ${totalPages}`:"";
       $("previousPage").disabled=catalogPage===1;
