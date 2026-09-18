@@ -11,4 +11,8 @@ export const catalog = new Map([
   [8, { name: 'Batman', amount: 599 }],
   [9, { name: 'Acrylic Display Case', amount: 1999 }],
   [10, { name: 'Toji Fushiguro', amount: 5818 }],
+  [11, { name: 'Giyu Tomioka Battle Version Figure', amount: 6720 }],
+  [12, { name: 'Anime Embroidered Keychain Jet Tag', amount: 1789 }],
+  [13, { name: 'Kurapika Judgment Chain Necklace', amount: 560 }],
+  [14, { name: 'Valorant Champions Karambit', amount: 2999 }],
 ]);
