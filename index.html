@@ -163,6 +163,11 @@
             </div>
           </div>
           <div id="products" class="grid grid-cols-1 min-[420px]:grid-cols-2 xl:grid-cols-3 gap-x-5 gap-y-8"></div>
+          <nav id="pagination" hidden aria-label="Product pages" class="mt-10 flex items-center justify-between gap-4 border-t border-[#ded9cd] pt-6">
+            <button id="previousPage" type="button" class="border border-[#d9d6c9] px-4 py-2 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#eee6d7]">← Previous</button>
+            <p id="pageStatus" class="text-xs text-[#727667]" aria-live="polite"></p>
+            <button id="nextPage" type="button" class="border border-[#d9d6c9] px-4 py-2 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#f5d65d] hover:border-[#f5d65d]">Next →</button>
+          </nav>
           <div id="emptyResults" hidden class="py-20 text-center">
             <h3 class="display text-3xl">No loot on this shelf.</h3>
             <p class="text-sm text-[#787d70] mt-2">Try another title or reset your filters.</p>
@@ -328,24 +333,6 @@
         description: "Seated Gojo Satoru and Suguru Geto Jujutsu Kaisen PVC collectibles for a desk or shelf.",
         sourceUrl: "https://www.etsy.com/listing/4563978230/gojo-satoru-suguru-geto-sitting-figures"
       },
-      {
-        id: 17,
-        name: "Hunter x Hunter Vibration Stars Gon",
-        detail: "Hunter x Hunter · 11 cm Banpresto figure",
-        category: "Figures",
-        price: 24.29,
-        label: "ON SALE",
-        image: "https://images.bigbadtoystore.com/images/product/121021/a2677618-a6bb-4795-b20f-5e803dcb2dda/212w.jpg",
-        images: [
-          "https://images.bigbadtoystore.com/images/product/121021/a2677618-a6bb-4795-b20f-5e803dcb2dda/212w.jpg",
-          "https://images.bigbadtoystore.com/images/product/121021/725b7c40-e3d2-45b9-8c42-0675ef2c4078/212w.jpg",
-          "https://images.bigbadtoystore.com/images/product/121021/1a0e98a7-f821-4721-8c44-01233f7eb7f6/212w.jpg",
-          "https://images.bigbadtoystore.com/images/product/121021/d753d3aa-b38f-41c4-ae7e-2760eaa070ee/212w.jpg",
-          "https://images.bigbadtoystore.com/images/product/121021/f17cb0d5-e522-4eef-bb19-19cc676f3801/212w.jpg"
-        ],
-        description: "An 11 cm non-articulated Gon figure from Hunter x Hunter's Vibration Stars line.",
-        sourceUrl: "https://www.bigbadtoystore.com/product/hunter-x-hunter-vibration-stars-gon-121021?variation=235034"
-      },
       {id:1,name:"One Piece",detail:"Volume 01 · Eiichiro Oda",category:"Manga",price:11.99,label:"START HERE",color:"#c35337",bg:"#f5d27c",word:"ONE\nPIECE",number:"01"},
       {id:2,name:"Jujutsu Kaisen",detail:"Volume 01 · Gege Akutami",category:"Manga",price:11.99,label:"SHELF ESSENTIAL",color:"#b34a60",bg:"#d7e4d8",word:"JUJUTSU\nKAISEN",number:"01"},
       {id:3,name:"Satoru Gojo",detail:"Display figure · Sample edition",category:"Figures",price:34.99,label:"DISPLAY WORTHY",color:"#334658",bg:"#e7e6df",figure:true},
@@ -359,7 +346,8 @@
     const $ = id => document.getElementById(id);
     const money = n => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(n);
     const safe = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-    let category = "All loot", cart = [], lastFocus, toastTimer;
+    const PAGE_SIZE = 10;
+    let category = "All loot", catalogPage = 1, cart = [], lastFocus, toastTimer;
     try {
       const saved = JSON.parse(localStorage.getItem("otaku-loot-cart-v1") || "[]");
       if(Array.isArray(saved)) {
@@ -427,9 +415,17 @@
       if($("sort").value==="low")items.sort((a,b)=>a.price-b.price);
       if($("sort").value==="high")items.sort((a,b)=>b.price-a.price);
       if($("sort").value==="name")items.sort((a,b)=>a.name.localeCompare(b.name));
+      const totalPages=Math.max(1,Math.ceil(items.length/PAGE_SIZE));
+      catalogPage=Math.min(catalogPage,totalPages);
+      const start=(catalogPage-1)*PAGE_SIZE;
+      const pageItems=items.slice(start,start+PAGE_SIZE);
       $("resultCount").textContent=`${items.length} finds`;
       $("emptyResults").hidden=items.length>0;
-      $("products").innerHTML=items.map(p=>`
+      $("pagination").hidden=items.length<=PAGE_SIZE;
+      $("pageStatus").textContent=items.length?`Page ${catalogPage} of ${totalPages}`:"";
+      $("previousPage").disabled=catalogPage===1;
+      $("nextPage").disabled=catalogPage===totalPages;
+      $("products").innerHTML=pageItems.map(p=>`
         <article class="product min-w-0">
           <div class="product-stage relative h-[250px] flex items-center justify-center overflow-hidden">
             ${p.label?`<span class="absolute left-3 top-3 bg-[#fffdf4] text-[8px] font-bold tracking-[.1em] px-2 py-1.5 z-10">${p.label}</span>`:""}
@@ -447,8 +443,8 @@
         </article>`).join("");
     }
 
-    function setCategory(value){category=value;renderCategories();renderProducts()}
-    function reset(){category="All loot";$("price").value=100;$("priceLabel").textContent="$100";$("search").value="";$("sort").value="featured";renderCategories();renderProducts()}
+    function setCategory(value){category=value;catalogPage=1;renderCategories();renderProducts()}
+    function reset(){category="All loot";catalogPage=1;$("price").value=100;$("priceLabel").textContent="$100";$("search").value="";$("sort").value="featured";renderCategories();renderProducts()}
     function notify(message){$("toast").textContent=message;$("toast").classList.remove("opacity-0");clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").classList.add("opacity-0"),2400)}
     function persist(){try{localStorage.setItem("otaku-loot-cart-v1",JSON.stringify(cart))}catch{}}
 
@@ -507,9 +503,11 @@
     $("starterFilter").onclick=()=>setCategory("Manga");
     $("resetFilters").onclick=reset;
     $("emptyReset").onclick=reset;
-    $("search").addEventListener("input",renderProducts);
-    $("sort").addEventListener("change",renderProducts);
-    $("price").addEventListener("input",()=>{$("priceLabel").textContent=`$${$("price").value}`;renderProducts()});
+    $("search").addEventListener("input",()=>{catalogPage=1;renderProducts()});
+    $("sort").addEventListener("change",()=>{catalogPage=1;renderProducts()});
+    $("price").addEventListener("input",()=>{catalogPage=1;$("priceLabel").textContent=`$${$("price").value}`;renderProducts()});
+    $("previousPage").onclick=()=>{if(catalogPage>1){catalogPage--;renderProducts();$("shop").scrollIntoView({behavior:"smooth"})}};
+    $("nextPage").onclick=()=>{catalogPage++;renderProducts();$("shop").scrollIntoView({behavior:"smooth"})};
     $("searchShortcut").onclick=()=>{$("shop").scrollIntoView({behavior:"smooth"});$("search").focus({preventScroll:true})};
     $("products").addEventListener("click",e=>{
       const b=e.target.closest("[data-add]");
