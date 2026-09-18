@@ -1,5 +1,9 @@
 # Otaku Loot Box — Cassius sandbox checkout
 
+Optional paid test-order recording is now implemented. See [ORDER-QUEUE.md](ORDER-QUEUE.md)
+for private persistent storage and webhook setup. Without that configuration,
+order recording remains disabled. Supplier purchasing and notifications remain disabled.
+
 The storefront remains on GitHub Pages. A separate Node backend creates multi-item
 Stripe-hosted Checkout sessions. No custom domain is needed.
 
@@ -24,9 +28,9 @@ no real Stripe payment has been run.
   rate-limits requests, and uses idempotency keys for checkout retries.
 - Verifies payment status with Stripe. A success URL alone is never confirmation.
   The cart stays available for testing after success, cancellation, or errors.
-- No supplier orders, shipments, or fulfillment records are created. No fulfillment
-  webhook is installed. Stripe retains any entered shipping address in the sandbox;
-  the backend neither persists it nor exposes it in status responses.
+- No supplier orders or shipments are created. When configured, the signed webhook
+  persists paid test orders and shipping addresses privately. Public status responses
+  never expose addresses. See ORDER-QUEUE.md for the optional configuration.
 
 ## Connect the backend
 

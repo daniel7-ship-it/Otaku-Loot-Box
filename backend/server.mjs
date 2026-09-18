@@ -1,5 +1,6 @@
 import { createServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
+import { verifySignature, captureOrder, orderStore, authorized } from './orders.mjs';
 import { HttpError, validateConfig, createStripeClient, verifySandbox, buildCheckout, checkoutKey, assertTestSession } from './checkout.mjs';
 
 async function readJson(req) {
@@ -12,7 +13,7 @@ async function readJson(req) {
   try { return JSON.parse(body); } catch { throw new HttpError(400, 'Invalid JSON.'); }
 }
 
-export function createApp({ config, stripe }) {
+export function createApp({ config, stripe, orders }) {
   const limits = new Map();
   return createServer(async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
@@ -22,6 +23,26 @@ export function createApp({ config, stripe }) {
     const send = (status, data) => { res.writeHead(status); res.end(JSON.stringify(data)); };
     try {
       const url = new URL(req.url, 'http://backend.local');
+      if (url.pathname === '/api/stripe/webhook' && req.method === 'POST') {
+        if (!orders || !config.webhookSecret) throw new HttpError(503, 'Order recording is not configured.');
+        const chunks = []; let size = 0;
+        for await (const chunk of req) {
+          size += chunk.length;
+          if (size > 262144) throw new HttpError(413, 'Request too large.');
+          chunks.push(chunk);
+        }
+        const raw = Buffer.concat(chunks);
+        verifySignature(raw, req.headers['stripe-signature'], config.webhookSecret);
+        let event;
+        try { event = JSON.parse(raw); } catch { throw new HttpError(400, 'Invalid JSON.'); }
+        await captureOrder(event, stripe, orders);
+        return send(200, { received: true });
+      }
+      if (url.pathname === '/api/orders' && req.method === 'GET') {
+        if (!orders || !config.agentToken) throw new HttpError(503, 'Order access is not configured.');
+        if (!authorized(req.headers.authorization, config.agentToken)) throw new HttpError(401, 'Unauthorized.');
+        return send(200, { mode: 'test', purchasingEnabled: false, orders: await orders.list() });
+      }
       if (url.pathname === '/health' && req.method === 'GET') return send(200, { mode: 'test', fulfillment: 'disabled' });
       if (req.headers.origin !== config.origin) throw new HttpError(403, 'Storefront origin is not allowed.');
       res.setHeader('Access-Control-Allow-Origin', config.origin);
@@ -66,9 +87,16 @@ export function createApp({ config, stripe }) {
 
 export async function start(env = process.env) {
   const config = validateConfig(env);
+  let orders;
+  if (env.ORDER_DATA_DIR || env.STRIPE_WEBHOOK_SECRET || env.ORDER_AGENT_TOKEN) {
+    if (!env.ORDER_DATA_DIR || !/^whsec_\S+$/.test(env.STRIPE_WEBHOOK_SECRET || '') || (env.ORDER_AGENT_TOKEN || '').length < 32) throw new Error('Complete order queue configuration is required.');
+    config.webhookSecret = env.STRIPE_WEBHOOK_SECRET;
+    config.agentToken = env.ORDER_AGENT_TOKEN;
+    orders = orderStore(env.ORDER_DATA_DIR);
+  }
   const stripe = createStripeClient(config.secret);
   await verifySandbox(stripe);
-  const server = createApp({ config, stripe });
+  const server = createApp({ config, stripe, orders });
   server.requestTimeout = 20000;
   server.headersTimeout = 10000;
   server.listen(Number(env.PORT || 4242), env.HOST || '127.0.0.1', () => console.log('Otaku checkout ready: Cassius sandbox, test mode, fulfillment disabled.'));
