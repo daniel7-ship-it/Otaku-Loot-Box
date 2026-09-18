@@ -15,4 +15,6 @@ export const catalog = new Map([
   [12, { name: 'Anime Embroidered Keychain Jet Tag', amount: 1789 }],
   [13, { name: 'Kurapika Judgment Chain Necklace', amount: 560 }],
   [14, { name: 'Valorant Champions Karambit', amount: 2999 }],
+  [15, { name: 'Re:Zero Rem & Emilia Figure', amount: 6990 }],
+  [16, { name: 'Gojo & Geto Sitting Figures', amount: 3555 }],
 ]);
