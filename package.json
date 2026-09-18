@@ -1,0 +1,10 @@
+{
+  "name": "otaku-loot-box-sandbox",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node --env-file=backend/.env backend/server.mjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}
