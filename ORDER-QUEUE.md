@@ -3,9 +3,13 @@
 **No paid Render disk?** Use [SUPABASE-SETUP.md](SUPABASE-SETUP.md) instead of the
 disk configuration below. Both storage options preserve the same order payload.
 
-This prepares order intake for a future Starnet connection. It does not place
-supplier orders, send notifications, or determine whether real payouts have
-reached a bank. Every recorded order remains `test_order_held`.
+This prepares order intake for a Starnet connection. It does not place supplier
+orders or determine whether real payouts have reached a bank. Every recorded
+order remains sandbox-only and real supplier payment is blocked.
+
+Supabase currently supports intake and private order listing only. The disk-based
+agent claim/tracking endpoints return 503 when Supabase is selected; they require
+a future database transaction implementation. No disk fallback is used.
 
 ## Enable on the private backend
 
@@ -24,15 +28,17 @@ The endpoint verifies the raw-body signature, retrieves the session from Stripe,
 checks test mode and paid status, and snapshots purchased line items and shipping.
 Webhook retries cannot overwrite or duplicate an existing session order.
 
-Future agents can GET `/api/orders` with `Authorization: Bearer YOUR_TOKEN` over
-HTTPS. This private endpoint returns up to 100 records (session-ID sort order),
-including customer information. Do not grant this token until the agent is ready
-and trusted to handle addresses. The public checkout status endpoint reveals no
-customer information. No claim, purchase, or release endpoint exists yet.
+Agents can GET `/api/orders` with `Authorization: Bearer YOUR_TOKEN` over HTTPS.
+They can claim an order, prepare a supplier dry-run plan, record a supplier
+confirmation, and record tracking through the corresponding POST endpoints.
+Claims are single-winner and persisted atomically. Supplier plans retain each
+product origin link but explicitly use `blocked_no_customer_card`; no payment
+endpoint exists. The public checkout status endpoint reveals no customer data.
 
-Notification status is `pending_configuration`; no messages are sent. Choose a
-notification destination later. Supplier links/variants must be mapped and verified
-before agent purchasing is implemented. Catalog IDs are retained in order items.
+Progress entries are appended to a private `notifications.jsonl` admin log.
+An external destination can be connected later through an adapter without
+changing the order model. Supplier links/variants must be mapped and verified
+before live purchasing is implemented. Catalog IDs are retained in order items.
 Live use will require payout reconciliation, supplier availability and variant
 checks, authenticated job claiming, and recorded purchase/tracking results.
 

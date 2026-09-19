@@ -56,8 +56,10 @@ read; missing tables, incorrect keys, or unreachable storage prevent startup.
    can retry instead of silently losing the order.
 
 Orders can also be read privately with Check-Store.ps1 -Orders. Supabase results
-are newest-first, up to 100. The existing disk implementation retains its original
-session-ID ordering. No supplier purchase or live charge is made by these steps.
+are newest-first, up to 100. The disk implementation lists all orders in session-ID
+order. Existing disk-based agent claim/tracking routes are unavailable for
+Supabase (503); they need database transactions before they can be enabled.
+No supplier purchase or live charge is made by these steps.
 
 Free Supabase projects can pause after inactivity and lack automatic backups.
 Plan private backups and service availability before launch:

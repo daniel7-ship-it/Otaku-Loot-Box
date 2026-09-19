@@ -72,3 +72,16 @@ test('database failures are sanitized and cause webhook failure so Stripe can re
     assert.deepEqual(await response.json(), { error: 'Order storage is unavailable. Please retry.' });
   } finally { await new Promise(resolve => server.close(resolve)); }
 });
+
+test('Supabase agent mutations fail explicitly without using local disk', async () => {
+  const server = createApp({ config: { agentToken: 'private' }, orders: {}, stripe: async () => ({}) });
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/orders/cs_test_example/claim`, {
+      method: 'POST', headers: { authorization: 'Bearer private', 'Content-Type': 'application/json' }, body: '{}',
+    });
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { error: 'Agent order updates are not enabled for this storage provider.' });
+  } finally { await new Promise(resolve => server.close(resolve)); }
+});

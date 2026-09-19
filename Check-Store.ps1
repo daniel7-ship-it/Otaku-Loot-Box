@@ -18,7 +18,7 @@ try {
         try {
             $token = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
             $result = Invoke-RestMethod -Uri "$backend/api/orders" -Headers @{ Authorization = "Bearer $token" } -TimeoutSec 90
-            Write-Host "Orders returned: $(@($result.orders).Count) (maximum 100)"
+            Write-Host "Orders returned: $(@($result.orders).Count) (Supabase returns up to 100)"
             $result.orders | Select-Object id, receivedAt, status, amountTotal, currency | Format-Table -AutoSize
             Write-Host 'Amounts are minor currency units: 2499 USD means $24.99. Addresses are not printed.'
         } finally {
