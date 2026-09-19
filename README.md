@@ -1,5 +1,7 @@
 # Otaku Loot Box — Cassius sandbox checkout
 
+For order storage without a paid Render disk, follow [SUPABASE-SETUP.md](SUPABASE-SETUP.md).
+
 Optional paid test-order recording is now implemented. See [ORDER-QUEUE.md](ORDER-QUEUE.md)
 for private persistent storage and webhook setup. Without that configuration,
 order recording remains disabled. Supplier purchasing and notifications remain disabled.
@@ -10,9 +12,11 @@ Stripe-hosted Checkout sessions. No custom domain is needed.
 ## Status
 
 Implemented from GitHub commit `da57689b248cb283ffef0d06297a17cc811fb297`.
-**Not connected to a deployed backend yet.** An empty `checkout-config.js` URL
-shows a setup message and preserves the cart. Tests use mocked Stripe responses;
-no real Stripe payment has been run.
+The local frontend configuration points to `https://otaku-loot-box.onrender.com`.
+The owner reports completing a sandbox checkout. Tests use mocked Stripe and
+Supabase responses; they do not prove deployed order recording works. Follow the
+Supabase guide to configure storage and verify a new recorded test order.
+Real payments and supplier purchasing remain disabled.
 
 ## Behavior
 

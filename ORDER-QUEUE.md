@@ -1,5 +1,8 @@
 # Test order queue
 
+**No paid Render disk?** Use [SUPABASE-SETUP.md](SUPABASE-SETUP.md) instead of the
+disk configuration below. Both storage options preserve the same order payload.
+
 This prepares order intake for a future Starnet connection. It does not place
 supplier orders, send notifications, or determine whether real payouts have
 reached a bank. Every recorded order remains `test_order_held`.

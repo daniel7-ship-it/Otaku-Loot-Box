@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
-import { verifySignature, captureOrder, orderStore, authorized } from './orders.mjs';
+import { verifySignature, captureOrder, authorized } from './orders.mjs';
+import { configureOrders } from './order-config.mjs';
 import { HttpError, validateConfig, createStripeClient, verifySandbox, buildCheckout, checkoutKey, assertTestSession } from './checkout.mjs';
 
 async function readJson(req) {
@@ -44,6 +45,11 @@ export function createApp({ config, stripe, orders }) {
         return send(200, { mode: 'test', purchasingEnabled: false, orders: await orders.list() });
       }
       if (url.pathname === '/health' && req.method === 'GET') return send(200, { mode: 'test', fulfillment: 'disabled' });
+      if (url.pathname === '/api/readiness' && req.method === 'GET') return send(200, {
+        mode: 'test', livePaymentsEnabled: false,
+        orderRecordingConfigured: Boolean(orders && config.webhookSecret && config.agentToken),
+        supplierPurchasingEnabled: false,
+      });
       if (req.headers.origin !== config.origin) throw new HttpError(403, 'Storefront origin is not allowed.');
       res.setHeader('Access-Control-Allow-Origin', config.origin);
       if (req.method === 'OPTIONS') {
@@ -87,13 +93,8 @@ export function createApp({ config, stripe, orders }) {
 
 export async function start(env = process.env) {
   const config = validateConfig(env);
-  let orders;
-  if (env.ORDER_DATA_DIR || env.STRIPE_WEBHOOK_SECRET || env.ORDER_AGENT_TOKEN) {
-    if (!env.ORDER_DATA_DIR || !/^whsec_\S+$/.test(env.STRIPE_WEBHOOK_SECRET || '') || (env.ORDER_AGENT_TOKEN || '').length < 32) throw new Error('Complete order queue configuration is required.');
-    config.webhookSecret = env.STRIPE_WEBHOOK_SECRET;
-    config.agentToken = env.ORDER_AGENT_TOKEN;
-    orders = orderStore(env.ORDER_DATA_DIR);
-  }
+  const orders = configureOrders(env, config);
+  if (orders?.check) await orders.check();
   const stripe = createStripeClient(config.secret);
   await verifySandbox(stripe);
   const server = createApp({ config, stripe, orders });
@@ -105,7 +106,7 @@ export async function start(env = process.env) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   start().catch(() => {
-    console.error('Backend startup refused. Check the Cassius test key, account permissions, network, and STOREFRONT_URL.');
+    console.error('Backend startup refused. Check Stripe, STOREFRONT_URL, and complete order storage settings/table availability.');
     process.exitCode = 1;
   });
 }
