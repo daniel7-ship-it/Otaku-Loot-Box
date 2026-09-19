@@ -44,7 +44,22 @@
   window.otakuCheckout = {
     get busy() { return busy; },
     reset() { busy = false; get('checkout').textContent = 'Test checkout →'; },
-    async begin(cart) {
+    showReview(cart, onSubmit) {
+      if (!cart.length || busy) return;
+      get('checkoutReview').hidden = false;
+      get('cartItems').hidden = true;
+      get('checkout').hidden = true;
+      get('checkoutReview').onsubmit = event => {
+        event.preventDefault();
+        if (get('checkoutReview').reportValidity()) onSubmit(new FormData(get('checkoutReview')));
+      };
+    },
+    hideReview() {
+      get('checkoutReview').hidden = true;
+      get('cartItems').hidden = false;
+      get('checkout').hidden = false;
+    },
+    async begin(cart, formData) {
       if (busy || !cart.length) return;
       busy = true;
       const button = get('checkout');
@@ -55,7 +70,7 @@
         const items = cart.map(({ id, qty }) => ({ id, qty })).sort((a, b) => a.id - b.id);
         const data = await request('/api/checkout', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items, requestId: requestId(items) }),
+          body: JSON.stringify({ items, requestId: requestId(items), customer: Object.fromEntries(formData || []) }),
         });
         const target = new URL(data.url);
         if (target.origin !== 'https://checkout.stripe.com' || target.username || target.password) throw new Error('Unexpected checkout destination.');
