@@ -133,7 +133,7 @@ export async function start(env = process.env) {
   const server = createApp({ config, stripe, orders });
   server.requestTimeout = 20000;
   server.headersTimeout = 10000;
-  server.listen(Number(env.PORT || 4242), env.HOST || '127.0.0.1', () => console.log('Otaku checkout ready: Cassius sandbox, test mode, fulfillment disabled.'));
+  server.listen(Number(env.PORT || 4242), env.HOST || '127.0.0.1', () => console.log(`Otaku checkout ready: Stripe ${config.mode} mode, fulfillment disabled.`));
   return server;
 }
 
