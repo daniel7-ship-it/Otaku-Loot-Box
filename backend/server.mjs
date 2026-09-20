@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
 import { prepareCheckout } from './pricing.mjs';
 import { pathToFileURL } from 'node:url';
 import { verifySignature, captureOrder, authorized } from './orders.mjs';
@@ -26,6 +27,21 @@ export function createApp({ config, stripe, orders }) {
     const send = (status, data) => { res.writeHead(status); res.end(JSON.stringify(data)); };
     try {
       const url = new URL(req.url, 'http://backend.local');
+      // Serve the customer storefront from the same Render service as the API.
+      // API routes remain JSON; only the public page and its browser scripts are static.
+      const storefrontFiles = {
+        '/': ['../index.html', 'text/html; charset=utf-8'],
+        '/index.html': ['../index.html', 'text/html; charset=utf-8'],
+        '/checkout-client.js': ['../checkout-client.js', 'text/javascript; charset=utf-8'],
+        '/checkout-config.js': ['../checkout-config.js', 'text/javascript; charset=utf-8'],
+      };
+      if (req.method === 'GET' && storefrontFiles[url.pathname]) {
+        const [relativePath, contentType] = storefrontFiles[url.pathname];
+        const file = await readFile(new URL(relativePath, import.meta.url));
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Cache-Control', 'no-cache');
+        res.writeHead(200); return res.end(file);
+      }
       if (url.pathname === '/api/stripe/webhook' && req.method === 'POST') {
         if (!orders || !config.webhookSecret) throw new HttpError(503, 'Order recording is not configured.');
         const chunks = []; let size = 0;
