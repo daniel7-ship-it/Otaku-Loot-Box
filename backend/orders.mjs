@@ -43,18 +43,19 @@ export function orderStore(directory) {
 }
 
 export async function captureOrder(event, stripe, store) {
-  if (event.livemode !== false) throw new HttpError(400, 'Only test events are accepted.');
+  if (typeof event.livemode !== 'boolean') throw new HttpError(400, 'Invalid payment mode.');
   if (!['checkout.session.completed', 'checkout.session.async_payment_succeeded'].includes(event.type)) return;
   const id = event.data?.object?.id;
-  if (!/^cs_test_[A-Za-z0-9]{1,200}$/.test(id || '')) throw new HttpError(400, 'Invalid session.');
+  const mode = event.livemode ? 'live' : 'test';
+  if (!new RegExp(`^cs_${mode}_[A-Za-z0-9]{1,200}$`).test(id || '')) throw new HttpError(400, 'Invalid session.');
   const session = await stripe(`/checkout/sessions/${id}`);
-  assertTestSession(session);
+  if (session.livemode !== event.livemode || session.metadata?.integration !== (event.livemode ? 'otaku-loot-box' : 'otaku-loot-box-sandbox')) throw new HttpError(400, 'Unexpected session mode.');
   if (session.payment_status !== 'paid' || session.status !== 'complete') return;
   let shipping = session.collected_information?.shipping_details || session.shipping_details || null;
   if (!shipping && session.metadata.checkout_version === 'embedded-v1') {
     if (!/^pi_[A-Za-z0-9]+$/.test(session.payment_intent || '')) throw new Error('Missing payment intent');
     const intent = await stripe(`/payment_intents/${session.payment_intent}`);
-    if (intent.livemode !== false || !intent.shipping?.address) throw new Error('Missing verified delivery address');
+    if (intent.livemode !== event.livemode || !intent.shipping?.address) throw new Error('Missing verified delivery address');
     shipping = intent.shipping;
   }
   const items = [];
@@ -65,7 +66,7 @@ export async function captureOrder(event, stripe, store) {
     items.push(...page.data.map(item => { const catalogId = item.price?.product?.metadata?.catalog_id || null; return { catalogId, name: item.description, quantity: item.quantity, amountTotal: item.amount_total, currency: item.currency, originLink: catalog.get(Number(catalogId))?.origin || null }; }));
     after = page.has_more ? page.data.at(-1).id : '';
   } while (after);
-  await store.save({ id, mode: 'test', receivedAt: new Date().toISOString(), status: 'test_order_held', purchasingEnabled: false, claimedBy: null, supplierPurchase: null, tracking: null,
+  await store.save({ id, mode, receivedAt: new Date().toISOString(), status: mode === 'live' ? 'ready_for_purchase' : 'test_order_held', purchasingEnabled: false, claimedBy: null, supplierPurchase: null, tracking: null,
     fundingStatus: 'not_applicable_test_payment', notificationStatus: 'pending_configuration', items,
     amountTotal: session.amount_total, currency: session.currency,
     shipping,

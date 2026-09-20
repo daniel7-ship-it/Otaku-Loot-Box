@@ -23,7 +23,7 @@
     const response = await fetch(`${apiBase()}${path}`, { ...options, signal: AbortSignal.timeout(60000) });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Test checkout is unavailable. Please retry.');
-    if (data.mode !== 'test') throw new Error('Checkout did not confirm test mode.');
+    if (!['test', 'live'].includes(data.mode)) throw new Error('Checkout did not confirm a valid payment mode.');
     return data;
   }
 
@@ -108,7 +108,7 @@
         if (token !== revision) return;
         const totals = data.totals;
         if (!totals || totals.currency !== 'usd' || !['subtotal', 'shipping', 'tax', 'total'].every(key => Number.isSafeInteger(totals[key]) && totals[key] >= 0) ||
-            totals.total !== totals.subtotal + totals.shipping + totals.tax || !data.clientSecret || !/^pk_test_/.test(data.publishableKey) || data.expiresAt * 1000 <= Date.now()) {
+            totals.total !== totals.subtotal + totals.shipping + totals.tax || !data.clientSecret || !new RegExp(`^pk_${data.mode}_`).test(data.publishableKey) || data.expiresAt * 1000 <= Date.now()) {
           throw new Error('A verified checkout total is not available. Please try again later.');
         }
         prepared = data;
@@ -123,7 +123,7 @@
         get('editDelivery').onclick = () => { invalidate(); get('checkoutReview').hidden = false; message('Update your address and calculate a new total.'); };
         expiryTimer = setTimeout(() => { invalidate(); get('checkoutReview').hidden = false; message('This total expired. Calculate it again before paying.'); }, data.expiresAt * 1000 - Date.now());
         busy = false;
-        message('Review your total, then pay securely here. Sandbox only; no real charge or shipment.');
+        message(data.mode === 'live' ? 'Review your total, then pay securely here.' : 'Review your total, then pay securely here. Sandbox only; no real charge or shipment.');
       } catch (error) {
         if (token !== revision) return;
         message(error.name === 'TypeError' || error.name === 'TimeoutError'
