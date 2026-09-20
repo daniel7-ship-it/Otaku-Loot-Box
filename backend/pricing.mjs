@@ -62,9 +62,8 @@ export async function prepareCheckout(body, config, stripe, now = Date.now()) {
   const parameters = {
     mode: 'payment', ui_mode: 'embedded_page', redirect_on_completion: 'never', payment_method_types: ['card'],
     customer: record.id, automatic_tax: { enabled: true }, expires_at: expiresAt,
-    // The customer shipping address above fixes the tax destination. Delivery
-    // address changes go back through our address step and receive a new rate.
-    payment_intent_data: { shipping: customerBody.shipping },
+    // The Stripe Customer carries the verified shipping address. Stripe Tax
+    // rejects payment_intent_data.shipping when automatic_tax is enabled.
     metadata: { integration: 'otaku-loot-box-sandbox', fulfillment: 'disabled', checkout_version: 'embedded-v1' },
     custom_text: { submit: { message: 'Sandbox test only. No real payment or shipment.' } },
     line_items: cart.map(({ id, qty }) => ({ quantity: qty, price_data: {

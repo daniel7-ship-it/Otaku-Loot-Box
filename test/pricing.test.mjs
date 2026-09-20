@@ -27,7 +27,7 @@ test('verified destination rate and Stripe Tax produce the exact embedded paymen
   assert.equal(parameters.ui_mode, 'embedded_page');
   assert.equal(parameters.redirect_on_completion, 'never');
   assert.equal(parameters.automatic_tax.enabled, true);
-  assert.equal(parameters.payment_intent_data.shipping.address.postal_code, '10001');
+  assert.equal(parameters.payment_intent_data, undefined);
   assert.equal(calls[0].options.body.shipping.address.postal_code, '10001');
   assert.equal(parameters.shipping_address_collection, undefined);
   assert.equal(parameters.success_url, undefined);
