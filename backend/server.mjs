@@ -1,8 +1,9 @@
 import { createServer } from 'node:http';
+import { prepareCheckout } from './pricing.mjs';
 import { pathToFileURL } from 'node:url';
 import { verifySignature, captureOrder, authorized } from './orders.mjs';
 import { configureOrders } from './order-config.mjs';
-import { HttpError, validateConfig, createStripeClient, verifySandbox, buildCheckout, checkoutKey, assertTestSession } from './checkout.mjs';
+import { HttpError, validateConfig, createStripeClient, verifySandbox, assertTestSession } from './checkout.mjs';
 import { updateOrder, notificationLog, supplierPurchasePlan, claimToken, hashToken, requireClaim, transitionOrder, validateAgentId, validateText } from './fulfillment.mjs';
 
 async function readJson(req) {
@@ -77,6 +78,9 @@ export function createApp({ config, stripe, orders }) {
         mode: 'test', livePaymentsEnabled: false,
         orderRecordingConfigured: Boolean(orders && config.webhookSecret && config.agentToken),
         supplierPurchasingEnabled: false,
+        checkoutVersion: 'embedded-v1',
+        embeddedKeyConfigured: /^pk_test_[A-Za-z0-9]+$/.test(config.publishableKey || ''),
+        shippingRatesConfigured: Array.isArray(config.shippingRates) && config.shippingRates.length > 0,
       });
       if (req.headers.origin !== config.origin) throw new HttpError(403, 'Storefront origin is not allowed.');
       res.setHeader('Access-Control-Allow-Origin', config.origin);
@@ -96,12 +100,7 @@ export function createApp({ config, stripe, orders }) {
 
       if (url.pathname === '/api/checkout' && req.method === 'POST') {
         const body = await readJson(req);
-        const parameters = buildCheckout(body?.items, config.storefront);
-        const session = await stripe('/checkout/sessions', { body: parameters, idempotencyKey: checkoutKey(body?.requestId, parameters) });
-        assertTestSession(session);
-        const target = new URL(session.url);
-        if (target.origin !== 'https://checkout.stripe.com' || target.username || target.password) throw new HttpError(502, 'Invalid Stripe checkout URL.');
-        return send(200, { url: target.href, mode: 'test' });
+        return send(200, await prepareCheckout(body, config, stripe));
       }
       if (url.pathname === '/api/checkout/status' && req.method === 'GET') {
         const id = url.searchParams.get('session_id') || '';
@@ -122,6 +121,9 @@ export function createApp({ config, stripe, orders }) {
 
 export async function start(env = process.env) {
   const config = validateConfig(env);
+  config.publishableKey = env.STRIPE_PUBLISHABLE_KEY;
+  config.shippingRates = JSON.parse(env.SHIPPING_RATES_JSON || '[]');
+  if (!Array.isArray(config.shippingRates)) throw new Error('SHIPPING_RATES_JSON must be an array.');
   const orders = configureOrders(env, config);
   if (orders?.check) await orders.check();
   const stripe = createStripeClient(config.secret);

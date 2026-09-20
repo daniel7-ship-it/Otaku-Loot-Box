@@ -50,6 +50,13 @@ export async function captureOrder(event, stripe, store) {
   const session = await stripe(`/checkout/sessions/${id}`);
   assertTestSession(session);
   if (session.payment_status !== 'paid' || session.status !== 'complete') return;
+  let shipping = session.collected_information?.shipping_details || session.shipping_details || null;
+  if (!shipping && session.metadata.checkout_version === 'embedded-v1') {
+    if (!/^pi_[A-Za-z0-9]+$/.test(session.payment_intent || '')) throw new Error('Missing payment intent');
+    const intent = await stripe(`/payment_intents/${session.payment_intent}`);
+    if (intent.livemode !== false || !intent.shipping?.address) throw new Error('Missing verified delivery address');
+    shipping = intent.shipping;
+  }
   const items = [];
   let after = '';
   do {
@@ -61,7 +68,7 @@ export async function captureOrder(event, stripe, store) {
   await store.save({ id, mode: 'test', receivedAt: new Date().toISOString(), status: 'test_order_held', purchasingEnabled: false, claimedBy: null, supplierPurchase: null, tracking: null,
     fundingStatus: 'not_applicable_test_payment', notificationStatus: 'pending_configuration', items,
     amountTotal: session.amount_total, currency: session.currency,
-    shipping: session.collected_information?.shipping_details || session.shipping_details || null,
+    shipping,
     email: session.customer_details?.email || null });
 }
 

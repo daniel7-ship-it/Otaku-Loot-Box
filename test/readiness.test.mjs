@@ -18,6 +18,7 @@ test('readiness reports configuration without secrets or customer information', 
       assert.deepEqual(await response.json(), {
         mode: 'test', livePaymentsEnabled: false,
         orderRecordingConfigured: configured, supplierPurchasingEnabled: false,
+        checkoutVersion: 'embedded-v1', embeddedKeyConfigured: false, shippingRatesConfigured: false,
       });
     } finally {
       await new Promise(resolve => server.close(resolve));

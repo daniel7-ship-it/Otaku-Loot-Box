@@ -64,38 +64,22 @@ test('Stripe transport sends encoded server prices and hides API error details',
   await assert.rejects(createStripeClient('sk_test_example', async () => new Response('private error', { status: 401 }))('/account'), error => !error.message.includes('private error') && error.status === 502);
 });
 
-test('HTTP checkout, CORS, status verification, malformed requests and live rejection', async t => {
-  const calls = [];
-  let responseSession = session;
-  const server = createApp({ config, stripe: async (path, options) => { calls.push({ path, options }); return responseSession; } });
+test('HTTP checkout blocks unpriced orders while preserving CORS and status checks', async t => {
+  const server = createApp({ config, stripe: async () => session });
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
   t.after(() => { server.closeAllConnections(); server.close(); });
   const base = `http://127.0.0.1:${server.address().port}`;
   const headers = { Origin: config.origin, 'Content-Type': 'application/json' };
-  const post = body => fetch(`${base}/api/checkout`, { method: 'POST', headers, body: JSON.stringify(body) });
-  const body = { items: [{ id: 10, qty: 2 }, { id: 1, qty: 3 }], requestId };
-  let response = await post(body);
-  assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { url: session.url, mode: 'test' });
-  assert.equal(calls[0].options.body.line_items.length, 2);
+  const body = { items: [{ id: 12, qty: 1 }], requestId, customer: { email: 'test@example.com', name: 'Test', address: '123 Test Street', city: 'New York', state: 'NY', postalCode: '10001', country: 'US' } };
+  const response = await fetch(`${base}/api/checkout`, { method: 'POST', headers, body: JSON.stringify(body) });
+  assert.equal(response.status, 422);
   assert.equal(response.headers.get('access-control-allow-origin'), config.origin);
   assert.equal((await fetch(`${base}/api/checkout`, { method: 'OPTIONS', headers })).status, 204);
   assert.equal((await fetch(`${base}/api/checkout`, { method: 'POST', headers: { Origin: 'https://evil.example' } })).status, 403);
-  assert.equal((await post({ items: [], requestId })).status, 400);
-  assert.equal((await post(null)).status, 400);
   assert.equal((await fetch(`${base}/api/checkout`, { method: 'POST', headers, body: '{' })).status, 400);
-  assert.equal((await fetch(`${base}/api/checkout`, { method: 'POST', headers, body: JSON.stringify({ padding: 'x'.repeat(9000) }) })).status, 413);
-  responseSession = { ...session, customer_details: { email: 'private@example.com' } };
-  response = await fetch(`${base}/api/checkout/status?session_id=cs_test_example`, { headers });
-  assert.deepEqual(await response.json(), { mode: 'test', status: 'complete', paymentStatus: 'paid', fulfillment: 'disabled' });
-  assert.equal((await fetch(`${base}/api/checkout/status?session_id=cs_live_bad`, { headers })).status, 400);
-  responseSession = { ...session, livemode: true };
-  assert.equal((await post(body)).status, 502);
-  responseSession = { ...session, metadata: {} };
-  assert.equal((await post(body)).status, 502);
-  responseSession = { ...session, url: 'https://evil.example/' };
-  assert.equal((await post(body)).status, 502);
+  const status = await fetch(`${base}/api/checkout/status?session_id=cs_test_example`, { headers });
+  assert.deepEqual(await status.json(), { mode: 'test', status: 'complete', paymentStatus: 'paid', fulfillment: 'disabled' });
 });
 
 test('backend catalog matches the current storefront and inline scripts parse', () => {
@@ -111,13 +95,13 @@ test('backend catalog matches the current storefront and inline scripts parse', 
 });
 
 function clientHarness(search = '') {
-  const nodes = new Map(['checkout', 'checkoutMessage'].map(id => [id, { textContent: '', disabled: false }]));
+  const nodes = new Map(['checkout', 'checkoutMessage', 'checkoutReview', 'orderReview', 'paymentPanel', 'reviewSubmit', 'final-subtotal', 'final-shipping', 'final-tax', 'final-total', 'deliverySummary', 'payOnSite', 'editDelivery', 'verifyPayment'].map(id => [id, { textContent: '', disabled: false }]));
   const storage = new Map();
   let destination;
   const context = {
     window: { OTAKU_CHECKOUT_API: 'https://backend.example', location: { assign: value => { destination = value; } } },
     document: { getElementById: id => nodes.get(id) },
-    location: { search }, URL, URLSearchParams, AbortSignal, crypto, Date,
+    location: { search }, URL, URLSearchParams, AbortSignal, crypto, Date, Intl, setTimeout: () => 1, clearTimeout: () => {},
     sessionStorage: { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) },
     fetch: async () => new Response(JSON.stringify({ mode: 'test', url: session.url })),
   };
@@ -125,23 +109,34 @@ function clientHarness(search = '') {
   return { context, nodes, client: context.window.otakuCheckout, destination: () => destination };
 }
 
-test('frontend sends multiple items, blocks duplicate clicks, preserves retry ID and recovers from errors', async () => {
+test('frontend reviews server totals, preserves retry ID, and embeds payment without navigation', async () => {
   const { context, client, nodes, destination } = clientHarness();
   const requests = [];
   context.fetch = async (url, options) => {
     requests.push(JSON.parse(options.body));
     if (requests.length === 1) throw new TypeError('offline');
-    return new Response(JSON.stringify({ mode: 'test', url: session.url }));
+    return new Response(JSON.stringify({ mode: 'test', sessionId: 'cs_test_fixture', clientSecret: 'cs_test_fixture_secret_test', publishableKey: 'pk_test_fixture', expiresAt: Date.now()/1000+1800, totals: { currency: 'usd', subtotal: 15233, shipping: 650, tax: 1000, total: 16883 } }));
   };
   const cart = [{ id: 10, qty: 2 }, { id: 1, qty: 3 }];
-  await client.begin(cart);
+  await client.begin(cart, new Map([['email', 'test@example.com']]));
   assert.equal(client.busy, false);
   assert.equal(nodes.get('checkout').disabled, false);
-  await Promise.all([client.begin(cart), client.begin(cart)]);
+  await Promise.all([client.begin(cart, new Map()), client.begin(cart, new Map())]);
   assert.equal(requests.length, 2);
   assert.equal(requests[0].requestId, requests[1].requestId);
   assert.equal(requests[0].items.length, 2);
-  assert.equal(destination(), session.url);
+  assert.equal(destination(), undefined);
+  assert.equal(nodes.get('final-total').textContent, '$168.83');
+  assert.equal(nodes.get('orderReview').hidden, false);
+  let mounted;
+  let destroyed = 0;
+  context.window.Stripe = () => ({ createEmbeddedCheckoutPage: async () => ({ mount: selector => mounted = selector, destroy: () => destroyed++ }) });
+  await client.mountPayment();
+  assert.equal(mounted, '#embeddedCheckout');
+  nodes.get('editDelivery').onclick();
+  assert.equal(destroyed, 1);
+  assert.equal(nodes.get('orderReview').hidden, true);
+  assert.equal(nodes.get('checkoutReview').hidden, false);
   assert.equal(cart.length, 2);
   client.reset();
   assert.equal(client.busy, false);

@@ -197,26 +197,36 @@
   </footer>
 
   <div id="cartOverlay" hidden class="fixed inset-0 bg-[#17251b]/45 backdrop-blur-sm z-40"></div>
-  <section id="cartPanel" role="dialog" aria-modal="true" aria-labelledby="cartTitle" aria-hidden="true" inert class="cart-panel fixed inset-y-0 right-0 w-full max-w-[440px] bg-[#fbfaf5] z-50 shadow-2xl flex flex-col">
+  <section id="cartPanel" role="dialog" aria-modal="true" aria-labelledby="cartTitle" aria-hidden="true" inert class="cart-panel fixed inset-y-0 right-0 w-full max-w-[680px] bg-[#fbfaf5] z-50 shadow-2xl flex flex-col overflow-y-auto">
     <div class="wood p-6 flex justify-between items-center border-b border-[#c9b38e]">
       <div><p class="text-[10px] font-bold tracking-[.17em]">GOOD TASTE. GREAT LOOT.</p><h2 id="cartTitle" class="display text-4xl font-semibold mt-1">Your loot box</h2></div>
       <button id="cartClose" aria-label="Close cart" class="w-10 h-10 text-3xl font-light">×</button>
     </div>
     <div id="cartItems" class="flex-1 overflow-y-auto p-6"></div>
-    <form id="checkoutReview" hidden class="p-6 border-t border-[#ded9cd] space-y-3">
-      <div class="flex items-center justify-between gap-3"><h3 class="display text-2xl">Final review</h3><button type="button" id="reviewBack" class="text-xs underline">Back to cart</button></div>
+    <form id="checkoutReview" hidden class="shrink-0 p-6 border-t border-[#ded9cd] space-y-3">
+      <div class="flex items-center justify-between gap-3"><h3 class="display text-2xl">Delivery details</h3><button type="button" id="reviewBack" class="text-xs underline">Back to cart</button></div>
       <p class="text-xs text-[#7d8273]">Enter your email and delivery address for order updates.</p>
       <label class="block text-xs font-semibold" for="customerEmail">Email<input id="customerEmail" name="email" type="email" required autocomplete="email" class="mt-1 w-full border border-[#d9d6c9] bg-white px-3 py-3 text-sm"></label>
       <label class="block text-xs font-semibold" for="customerName">Full name<input id="customerName" name="name" required autocomplete="name" class="mt-1 w-full border border-[#d9d6c9] bg-white px-3 py-3 text-sm"></label>
       <label class="block text-xs font-semibold" for="customerAddress">Street address<input id="customerAddress" name="address" required autocomplete="street-address" class="mt-1 w-full border border-[#d9d6c9] bg-white px-3 py-3 text-sm"></label>
-      <div class="grid grid-cols-2 gap-3"><label class="block text-xs font-semibold" for="customerCity">City<input id="customerCity" name="city" required autocomplete="address-level2" class="mt-1 w-full border border-[#d9d6c9] bg-white px-3 py-3 text-sm"></label><label class="block text-xs font-semibold" for="customerState">State<input id="customerState" name="state" required autocomplete="address-level1" class="mt-1 w-full border border-[#d9d6c9] bg-white px-3 py-3 text-sm"></label></div>
+      <div class="grid grid-cols-2 gap-3"><label class="block text-xs font-semibold" for="customerCity">City<input id="customerCity" name="city" required autocomplete="address-level2" class="mt-1 w-full border border-[#d9d6c9] bg-white px-3 py-3 text-sm"></label><label class="block text-xs font-semibold" for="customerState">State<input id="customerState" name="state" required maxlength="2" pattern="[A-Za-z]{2}" placeholder="NY" autocomplete="address-level1" class="mt-1 w-full border border-[#d9d6c9] bg-white px-3 py-3 text-sm"></label></div>
       <div class="grid grid-cols-2 gap-3"><label class="block text-xs font-semibold" for="customerZip">ZIP code<input id="customerZip" name="postalCode" required pattern="[0-9]{5}(-[0-9]{4})?" autocomplete="postal-code" class="mt-1 w-full border border-[#d9d6c9] bg-white px-3 py-3 text-sm"></label><label class="block text-xs font-semibold" for="customerCountry">Country<select id="customerCountry" name="country" autocomplete="country" class="mt-1 w-full border border-[#d9d6c9] bg-white px-3 py-3 text-sm"><option value="US">United States</option></select></label></div>
-      <div class="border-t border-[#ded9cd] pt-3 text-sm space-y-2"><div class="flex justify-between"><span>Items</span><span id="reviewSubtotal">$0.00</span></div><div class="flex justify-between"><span>Shipping</span><span>Calculated at checkout</span></div><div class="flex justify-between"><span>Tax</span><span>Calculated at checkout</span></div><div class="flex justify-between font-semibold"><span>Current subtotal</span><span id="reviewTotal">$0.00</span></div></div>
-      <button id="reviewSubmit" type="submit" class="w-full bg-[#2d4433] text-white py-4 font-semibold text-sm">Continue to secure checkout →</button>
+      <div class="border-t border-[#ded9cd] pt-3 text-sm space-y-2"><div class="flex justify-between"><span>Items</span><span id="reviewSubtotal">$0.00</span></div><div class="flex justify-between"><span>Shipping</span><span>Not calculated yet</span></div><div class="flex justify-between"><span>Tax</span><span>Not calculated yet</span></div><div class="flex justify-between font-semibold"><span>Current subtotal</span><span id="reviewTotal">$0.00</span></div></div>
+      <button id="reviewSubmit" type="submit" class="w-full bg-[#2d4433] text-white py-4 font-semibold text-sm">Calculate shipping &amp; tax →</button>
     </form>
-    <div class="p-6 border-t border-[#ded9cd]">
+    <section id="orderReview" hidden class="shrink-0 p-6 border-t border-[#ded9cd] space-y-4" aria-labelledby="finalReviewTitle">
+      <div class="flex items-center justify-between"><h3 id="finalReviewTitle" class="display text-2xl">Final review</h3><button id="editDelivery" type="button" class="text-xs underline">Edit address</button></div>
+      <p id="deliverySummary" class="text-sm break-words"></p>
+      <dl class="space-y-2 text-sm"><div class="flex justify-between"><dt>Items</dt><dd id="final-subtotal"></dd></div><div class="flex justify-between"><dt>Shipping</dt><dd id="final-shipping"></dd></div><div class="flex justify-between"><dt>Tax</dt><dd id="final-tax"></dd></div><div class="flex justify-between border-t pt-3 font-bold text-lg"><dt>Total</dt><dd id="final-total"></dd></div></dl>
+      <button id="payOnSite" type="button" class="w-full bg-[#2d4433] text-white py-4 font-semibold text-sm">Continue to payment</button>
+    </section>
+    <section id="paymentPanel" hidden class="shrink-0 p-4" aria-label="Secure payment">
+      <div id="embeddedCheckout"></div>
+      <button id="verifyPayment" type="button" class="text-sm underline mt-3">Check payment status</button>
+    </section>
+    <div class="shrink-0 p-6 border-t border-[#ded9cd]">
       <div class="flex justify-between font-semibold"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
-      <p class="text-xs text-[#7d8273] mt-2">Test checkout · Worldwide supported shipping addresses collected. No shipping charge or tax in this test. No items will be shipped.</p>
+      <p class="text-xs text-[#7d8273] mt-2">Sandbox checkout · Shipping availability is checked for your US delivery address. Review shipping, tax and total before payment. No real charge or shipment.</p>
       <button id="checkout" class="w-full bg-[#2d4433] text-white py-4 mt-5 font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed">Test checkout →</button>
       <p id="checkoutMessage" role="status" class="text-xs leading-5 mt-3 text-[#727866]">Sandbox only. No real payments or supplier orders.</p>
     </div>
@@ -224,6 +234,7 @@
 
   <div id="toast" role="status" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#293d31] text-white shadow-xl px-5 py-3 text-sm z-[60] rounded-sm pointer-events-none opacity-0 transition-opacity w-max max-w-[90vw]"></div>
 
+  <script src="https://js.stripe.com/dahlia/stripe.js"></script>
   <script src="checkout-config.js"></script>
   <script src="checkout-client.js"></script>
   <script>
@@ -495,6 +506,7 @@
     function persist(){try{localStorage.setItem("otaku-loot-cart-v1",JSON.stringify(cart))}catch{}}
 
     function renderCart(){
+      window.otakuCheckout.hideReview();
       $("cartCount").textContent=cart.reduce((sum,i)=>sum+i.qty,0);
       const itemTotal=cart.reduce((sum,i)=>sum+catalog.find(p=>p.id===i.id).price*i.qty,0);
       $("subtotal").textContent=money(itemTotal);
@@ -592,7 +604,7 @@
       if(!$("cartPanel").classList.contains("open"))return;
       if(e.key==="Escape")closeCart();
       if(e.key==="Tab"){
-        const focusable=[...$("cartPanel").querySelectorAll('button:not([disabled]),a[href],input,select,[tabindex="0"]')];
+        const focusable=[...$("cartPanel").querySelectorAll('button:not([disabled]),a[href],input,select,iframe,[tabindex="0"]')].filter(el=>el.getClientRects().length);
         const first=focusable[0],last=focusable.at(-1);
         if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
         else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
