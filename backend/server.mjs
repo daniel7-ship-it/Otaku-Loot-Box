@@ -138,8 +138,8 @@ export async function start(env = process.env) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  start().catch(() => {
-    console.error('Backend startup refused. Check Stripe, STOREFRONT_URL, and complete order storage settings/table availability.');
+  start().catch(error => {
+    console.error(`Backend startup refused: ${error instanceof Error ? error.message : 'configuration error'}`);
     process.exitCode = 1;
   });
 }
