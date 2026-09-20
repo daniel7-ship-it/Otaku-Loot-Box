@@ -3,7 +3,7 @@
 Deployment update, September 20, 2026: commit `8c4363b` is on GitHub main and
 Render. The correct Stripe sandbox's default product category has been saved
 as General - Tangible Goods. Public-key configuration is deployed and verified.
-Shipping remains unavailable: the standalone Etsy worker receives HTTP 403.
+Shipping uses a clearly disclosed flat $7.00 store policy while supplier APIs are unavailable.
 The proposed temporary four-ZIP rate table was not deployed after automatic
 approval review rejected that incomplete fallback. Checkout must not be described
 as fully configured or verified end to end yet.
@@ -21,7 +21,7 @@ The backend stays sandbox-only. Live keys remain rejected.
   tax registrations. Session `automatic_tax.status` must be `complete`.
 - Connect a server-owned `quoteShipping` provider after Etsy approves API access
   and its responses are verified to support the required shipping calculation.
-  `SHIPPING_RATES_JSON` is no longer read. No shipping table is stored.
+  `SHIPPING_RATES_JSON` is no longer read. No rate table is stored.
 
 Each checkout request calls the provider with normalized `items`, `destination`
 (address, city, state, postalCode, country), and the required `expiresAt` in Unix
