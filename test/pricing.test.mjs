@@ -7,7 +7,7 @@ export const items = [{ id: 12, qty: 1 }];
 export const requestId = 'ab53719c-1fa4-4f4d-a438-7032b504fe39';
 // Synthetic rates are test fixtures only, never deployed shipping configuration.
 export const rates = [{ approved: true, currency: 'usd', country: 'US', state: 'NY', postalCodes: ['10001'], items, amount: 650, source: 'Synthetic test fixture', validUntil: '2099-01-01T00:00:00Z' }];
-export const pricingConfig = { shippingRates: rates, publishableKey: 'pk_test_fixture' };
+export const pricingConfig = { quoteShipping: async ({ items, destination }) => ({ ...rates[0], items, destination, checkoutEligible: true }), publishableKey: 'pk_test_fixture' };
 export function stripeFixture(calls = [], change = {}) {
   return async (path, options) => {
     calls.push({ path, options });
@@ -34,12 +34,15 @@ test('verified destination rate and Stripe Tax produce the exact embedded paymen
   assert.equal(data.url, undefined);
 });
 
-test('missing, expired, unapproved, ambiguous, wrong ZIP/state/cart rates block before Stripe', async () => {
-  const base = rates[0];
-  for (const shippingRates of [[], [base, base], [{ ...base, approved: false }], [{ ...base, amount: -1 }],
-    [{ ...base, validUntil: '2020-01-01' }], [{ ...base, postalCodes: ['39759'] }], [{ ...base, state: 'MS' }],
-    [{ ...base, items: [{ id: 12, qty: 2 }] }]]) {
-    await assert.rejects(prepareCheckout({ items, customer, requestId }, { ...pricingConfig, shippingRates }, () => { throw new Error('Must not call Stripe'); }), { status: 422 });
+test('missing, failed, expired, estimated and mismatched quotes block before Stripe', async () => {
+  const destination = Object.fromEntries(['address', 'city', 'state', 'postalCode', 'country'].map(key => [key, customer[key]]));
+  const base = await pricingConfig.quoteShipping({ items, destination });
+  for (const quoteShipping of [undefined, async () => { throw new Error('supplier down'); },
+    ...[null, { ...base, checkoutEligible: false }, { ...base, amount: -1 },
+      { ...base, validUntil: '2020-01-01' }, { ...base, destination: { ...destination, postalCode: '39759' } },
+      { ...base, destination: { ...destination, address: 'Different street' } },
+      { ...base, items: [{ id: 12, qty: 2 }] }].map(rate => async () => rate)]) {
+    await assert.rejects(prepareCheckout({ items, customer, requestId }, { ...pricingConfig, quoteShipping }, () => { throw new Error('Must not call Stripe'); }), { status: 422 });
   }
 });
 
@@ -65,5 +68,16 @@ test('changed address binds different Stripe idempotency keys and valid zero tax
 
 test('address validation and missing public key fail explicitly', async () => {
   for (const input of [null, { ...customer, email: 'bad' }, { ...customer, country: 'CA' }, { ...customer, postalCode: 'bad' }, { ...customer, state: '' }]) assert.throws(() => normalizeCustomer(input), { status: 400 });
-  await assert.rejects(prepareCheckout({ items, customer, requestId }, { shippingRates: rates }, stripeFixture()), { status: 503 });
+  await assert.rejects(prepareCheckout({ items, customer, requestId }, { quoteShipping: pricingConfig.quoteShipping }, stripeFixture()), { status: 503 });
+});
+
+test('shipping requests are fresh and omit contact details', async () => {
+  const requests = [];
+  const provider = async request => { requests.push(request); return pricingConfig.quoteShipping(request); };
+  await shippingFor(items, customer, provider, 2000000000);
+  await shippingFor(items, { ...customer, postalCode: '90210', state: 'CA' }, provider, 2000000000);
+  assert.equal(requests.length, 2);
+  assert.equal(requests[1].destination.postalCode, '90210');
+  assert.equal(requests[0].destination.email, undefined);
+  assert.equal(requests[0].destination.name, undefined);
 });

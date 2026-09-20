@@ -8,10 +8,22 @@ All results are listing estimates with checkoutEligible=false, not final cart to
 
 ## Status
 
+September 20, 2026 runtime test: the actual standalone headless Playwright worker
+received HTTP 403 from Etsy before any delivery calculator appeared. It cannot
+currently supply unattended checkout quotes. The worker now detects unsuccessful
+HTTP responses immediately and closes its isolated context. No challenge bypass,
+cookie copying, or proxy workaround was attempted.
+
+The interactive browser displayed $7.08 for one item to ZIPs 39759 (MS),
+10001 (NY), 90210 (CA), and 99501 (AK). These are listing observations, not
+evidence of nationwide rates or reliable automation. A temporary four-ZIP
+sandbox rate-table deployment was rejected by automatic approval review and
+was not applied. No shipping rates have been enabled on Render.
+
 Interactive browser check on September 19, 2026: Etsy showed $7.08 for 39759 and
 10001 on listing 1821496421. This does NOT prove all US ZIPs have that rate.
 Parser/validation/cleanup unit tests are automated. The standalone headless worker
-has NOT been run against Etsy or verified on Render. Its selectors and page-load
+was subsequently run against Etsy as described above, but is not verified on Render. Its selectors and page-load
 handling need a real runtime test before use. Existing checkout is unchanged.
 
 ## Next runtime test (developer instructions)

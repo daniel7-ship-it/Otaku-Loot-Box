@@ -80,7 +80,7 @@ export function createApp({ config, stripe, orders }) {
         supplierPurchasingEnabled: false,
         checkoutVersion: 'embedded-v1',
         embeddedKeyConfigured: /^pk_test_[A-Za-z0-9]+$/.test(config.publishableKey || ''),
-        shippingRatesConfigured: Array.isArray(config.shippingRates) && config.shippingRates.length > 0,
+        shippingRatesConfigured: typeof config.quoteShipping === 'function',
       });
       if (req.headers.origin !== config.origin) throw new HttpError(403, 'Storefront origin is not allowed.');
       res.setHeader('Access-Control-Allow-Origin', config.origin);
@@ -122,8 +122,8 @@ export function createApp({ config, stripe, orders }) {
 export async function start(env = process.env) {
   const config = validateConfig(env);
   config.publishableKey = env.STRIPE_PUBLISHABLE_KEY;
-  config.shippingRates = JSON.parse(env.SHIPPING_RATES_JSON || '[]');
-  if (!Array.isArray(config.shippingRates)) throw new Error('SHIPPING_RATES_JSON must be an array.');
+  // Connect a verified supplier quote provider once API access is approved.
+  // Until then checkout reports unavailable shipping before contacting Stripe.
   const orders = configureOrders(env, config);
   if (orders?.check) await orders.check();
   const stripe = createStripeClient(config.secret);
