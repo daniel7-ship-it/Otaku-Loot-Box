@@ -1,4 +1,4 @@
-import { HttpError, normalizeCart, checkoutKey, assertTestSession } from './checkout.mjs';
+import { HttpError, normalizeCart, checkoutKey, assertSession } from './checkout.mjs';
 import { catalog } from './catalog.mjs';
 
 export function normalizeCustomer(input) {
@@ -52,20 +52,20 @@ export async function prepareCheckout(body, config, stripe, now = Date.now()) {
   // cover the entire session, not just the moment the review is displayed.
   const expiresAt = Math.floor(now / 1800000) * 1800 + 3600;
   const shipping = await shippingFor(cart, customer, config.quoteShipping, expiresAt, config.shippingAmount);
-  if (!/^pk_test_[A-Za-z0-9]+$/.test(config.publishableKey || '')) {
+  if (!new RegExp(`^pk_${config.mode || 'test'}_[A-Za-z0-9]+$`).test(config.publishableKey || '')) {
     throw new HttpError(503, 'Secure payment is being configured. Please try again later.');
   }
   const address = { line1: customer.address, city: customer.city, state: customer.state, postal_code: customer.postalCode, country: customer.country };
   const customerBody = { email: customer.email, name: customer.name, address, shipping: { name: customer.name, address }, tax: { validate_location: 'immediately' } };
   const record = await stripe('/customers', { body: customerBody, idempotencyKey: checkoutKey(body.requestId, customerBody) });
-  if (!/^cus_[A-Za-z0-9]+$/.test(record.id || '') || record.livemode !== false) throw new HttpError(502, 'Could not verify the customer address.');
+  if (!/^cus_[A-Za-z0-9]+$/.test(record.id || '') || record.livemode !== (config.mode === 'live')) throw new HttpError(502, 'Could not verify the customer address.');
   const parameters = {
     mode: 'payment', ui_mode: 'embedded_page', redirect_on_completion: 'never', payment_method_types: ['card'],
     customer: record.id, automatic_tax: { enabled: true }, expires_at: expiresAt,
     // The Stripe Customer carries the verified shipping address. Stripe Tax
     // rejects payment_intent_data.shipping when automatic_tax is enabled.
-    metadata: { integration: 'otaku-loot-box-sandbox', fulfillment: 'disabled', checkout_version: 'embedded-v1' },
-    custom_text: { submit: { message: 'Sandbox test only. No real payment or shipment.' } },
+    metadata: { integration: config.mode === 'live' ? 'otaku-loot-box' : 'otaku-loot-box-sandbox', fulfillment: 'disabled', checkout_version: 'embedded-v1' },
+    custom_text: { submit: { message: config.mode === 'live' ? 'Payment is processed securely. Supplier fulfillment is handled separately.' : 'Sandbox test only. No real payment or shipment.' } },
     line_items: cart.map(({ id, qty }) => ({ quantity: qty, price_data: {
       currency: 'usd', unit_amount: catalog.get(id).amount, tax_behavior: 'exclusive',
       product_data: { name: catalog.get(id).name, metadata: { catalog_id: String(id) } },
@@ -74,7 +74,7 @@ export async function prepareCheckout(body, config, stripe, now = Date.now()) {
       fixed_amount: { amount: shipping.amount, currency: 'usd' }, tax_behavior: 'exclusive', tax_code: 'txcd_92010001' } }],
   };
   const session = await stripe('/checkout/sessions', { body: parameters, idempotencyKey: checkoutKey(body.requestId, parameters) });
-  assertTestSession(session);
+  assertSession(session, config);
   const subtotal = cart.reduce((sum, item) => sum + catalog.get(item.id).amount * item.qty, 0);
   const tax = session.total_details?.amount_tax;
   if (session.status !== 'open' || session.currency !== 'usd' || session.automatic_tax?.status !== 'complete' ||
@@ -83,6 +83,6 @@ export async function prepareCheckout(body, config, stripe, now = Date.now()) {
       !session.client_secret?.startsWith(`${session.id}_secret_`) || !Number.isSafeInteger(session.expires_at) || session.expires_at <= now / 1000 || session.expires_at > expiresAt) {
     throw new HttpError(502, 'Could not confirm shipping and tax. Please check your address and try again.');
   }
-  return { mode: 'test', sessionId: session.id, clientSecret: session.client_secret, publishableKey: config.publishableKey,
+  return { mode: config.mode || 'test', sessionId: session.id, clientSecret: session.client_secret, publishableKey: config.publishableKey,
     expiresAt: session.expires_at, totals: { subtotal, shipping: shipping.amount, tax, total: session.amount_total, currency: 'usd' } };
 }

@@ -3,7 +3,7 @@ import { prepareCheckout } from './pricing.mjs';
 import { pathToFileURL } from 'node:url';
 import { verifySignature, captureOrder, authorized } from './orders.mjs';
 import { configureOrders } from './order-config.mjs';
-import { HttpError, validateConfig, createStripeClient, verifySandbox, assertTestSession } from './checkout.mjs';
+import { HttpError, validateConfig, createStripeClient, verifyAccount, assertSession } from './checkout.mjs';
 import { updateOrder, notificationLog, supplierPurchasePlan, claimToken, hashToken, requireClaim, transitionOrder, validateAgentId, validateText } from './fulfillment.mjs';
 
 async function readJson(req) {
@@ -73,13 +73,13 @@ export function createApp({ config, stripe, orders }) {
         const order = await updateOrder(orders.directory, id, old => { requireClaim(old, body.agentId, body.claimToken); if (old.status === 'tracking_recorded') return old; return { ...transitionOrder(old, 'tracking_recorded'), tracking: { carrier: body.carrier, trackingNumber: body.trackingNumber, recordedAt: new Date().toISOString() } }; });
         await log.add({ orderId: id, kind: 'progress', message: 'Tracking recorded.' }); return send(200, { order });
       }
-      if (url.pathname === '/health' && req.method === 'GET') return send(200, { mode: 'test', fulfillment: 'disabled' });
+      if (url.pathname === '/health' && req.method === 'GET') return send(200, { mode: config.mode, fulfillment: 'disabled' });
       if (url.pathname === '/api/readiness' && req.method === 'GET') return send(200, {
-        mode: 'test', livePaymentsEnabled: false,
+        mode: config.mode || 'test', livePaymentsEnabled: config.mode === 'live',
         orderRecordingConfigured: Boolean(orders && config.webhookSecret && config.agentToken),
         supplierPurchasingEnabled: false,
         checkoutVersion: 'embedded-v1',
-        embeddedKeyConfigured: /^pk_test_[A-Za-z0-9]+$/.test(config.publishableKey || ''),
+        embeddedKeyConfigured: new RegExp(`^pk_${config.mode || 'test'}_[A-Za-z0-9]+$`).test(config.publishableKey || ''),
         shippingRatesConfigured: typeof config.quoteShipping === 'function' || config.shippingAmount === 700,
       });
       if (req.headers.origin !== config.origin) throw new HttpError(403, 'Storefront origin is not allowed.');
@@ -103,12 +103,13 @@ export function createApp({ config, stripe, orders }) {
         return send(200, await prepareCheckout(body, config, stripe));
       }
       if (url.pathname === '/api/checkout/status' && req.method === 'GET') {
+        const mode = config.mode || 'test';
         const id = url.searchParams.get('session_id') || '';
-        if (!/^cs_test_[A-Za-z0-9]{1,200}$/.test(id)) throw new HttpError(400, 'A test session ID is required.');
+        if (!new RegExp(`^cs_${mode}_[A-Za-z0-9]{1,200}$`).test(id)) throw new HttpError(400, 'A valid checkout session ID is required.');
         const session = await stripe(`/checkout/sessions/${id}`);
-        assertTestSession(session);
+        assertSession(session, { ...config, mode });
         // Return no email, shipping address, or other personal information.
-        return send(200, { mode: 'test', status: session.status, paymentStatus: session.payment_status, fulfillment: 'disabled' });
+        return send(200, { mode, status: session.status, paymentStatus: session.payment_status, fulfillment: 'disabled' });
       }
       throw new HttpError(404, 'Not found.');
     } catch (error) {
@@ -128,7 +129,7 @@ export async function start(env = process.env) {
   const orders = configureOrders(env, config);
   if (orders?.check) await orders.check();
   const stripe = createStripeClient(config.secret);
-  await verifySandbox(stripe);
+  await verifyAccount(stripe, config);
   const server = createApp({ config, stripe, orders });
   server.requestTimeout = 20000;
   server.headersTimeout = 10000;

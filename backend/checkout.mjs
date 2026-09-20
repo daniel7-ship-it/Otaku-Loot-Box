@@ -12,15 +12,18 @@ export class HttpError extends Error {
 }
 
 export function validateConfig(env) {
-  if (!/^(sk|rk)_test_[A-Za-z0-9]+$/.test(env.STRIPE_SECRET_KEY || '')) {
-    throw new Error('A Cassius sandbox test key is required on the backend. Live keys are rejected.');
-  }
+  const mode = env.STRIPE_MODE || 'test';
+  if (!['test', 'live'].includes(mode)) throw new Error('STRIPE_MODE must be test or live.');
+  const prefix = mode === 'live' ? 'live' : 'test';
+  if (!new RegExp(`^(sk|rk)_${prefix}_[A-Za-z0-9]+$`).test(env.STRIPE_SECRET_KEY || '')) throw new Error(`A Stripe ${mode} secret key is required.`);
+  if (env.STRIPE_PUBLISHABLE_KEY && !new RegExp(`^pk_${prefix}_[A-Za-z0-9]+$`).test(env.STRIPE_PUBLISHABLE_KEY)) throw new Error(`A matching Stripe ${mode} publishable key is required.`);
   const url = new URL(env.STOREFRONT_URL);
   const local = ['localhost', '127.0.0.1'].includes(url.hostname);
   if ((url.protocol !== 'https:' && !(local && url.protocol === 'http:')) || url.username || url.password || url.search || url.hash) {
     throw new Error('STOREFRONT_URL must be an HTTPS page URL (HTTP localhost is allowed for development).');
   }
-  return { secret: env.STRIPE_SECRET_KEY, storefront: url.href, origin: url.origin };
+  return { secret: env.STRIPE_SECRET_KEY, publishableKey: env.STRIPE_PUBLISHABLE_KEY, storefront: url.href, origin: url.origin,
+    mode, accountId: env.STRIPE_ACCOUNT_ID || (mode === 'test' ? CASSIUS_ACCOUNT : '') };
 }
 
 export function normalizeCart(items) {
@@ -88,12 +91,14 @@ export function createStripeClient(secret, fetchImpl = fetch) {
   };
 }
 
-export async function verifySandbox(stripe) {
+export async function verifyAccount(stripe, config) {
   const account = await stripe('/account');
-  if (account.id !== CASSIUS_ACCOUNT) throw new Error('Refusing to run: the key does not belong to Cassius sandbox.');
+  if (config.accountId && account.id !== config.accountId) throw new Error('Refusing to run: the Stripe key does not belong to the configured account.');
   const balance = await stripe('/balance');
-  if (balance.livemode !== false) throw new Error('Refusing to run: Stripe did not confirm test mode.');
+  if (balance.livemode !== (config.mode === 'live')) throw new Error('Refusing to run: Stripe mode does not match STRIPE_MODE.');
 }
+
+export const verifySandbox = stripe => verifyAccount(stripe, { mode: 'test', accountId: CASSIUS_ACCOUNT });
 
 export function checkoutKey(requestId, parameters) {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId || '')) {
@@ -102,9 +107,12 @@ export function checkoutKey(requestId, parameters) {
   return `otaku-test-${requestId}-${createHash('sha256').update(JSON.stringify(parameters)).digest('hex')}`;
 }
 
-export function assertTestSession(session) {
-  if (session.livemode !== false || !session.id?.startsWith('cs_test_') ||
-      session.metadata?.integration !== 'otaku-loot-box-sandbox') {
+export function assertSession(session, config = { mode: 'test' }) {
+  const live = config.mode === 'live';
+  if (session.livemode !== live || !session.id?.startsWith(live ? 'cs_live_' : 'cs_test_') ||
+      session.metadata?.integration !== (live ? 'otaku-loot-box' : 'otaku-loot-box-sandbox')) {
     throw new HttpError(502, 'Stripe returned an unexpected checkout session.');
   }
 }
+
+export const assertTestSession = session => assertSession(session, { mode: 'test' });
