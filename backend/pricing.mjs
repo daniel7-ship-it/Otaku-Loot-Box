@@ -20,9 +20,14 @@ export function normalizeCustomer(input) {
 
 // Server-owned provider: fetch a fresh quote for this cart and destination.
 // No persisted rate table or browser-provided shipping amount is accepted.
-export async function shippingFor(cart, customer, quoteShipping, expiresAt) {
+export async function shippingFor(cart, customer, quoteShipping, expiresAt, flatAmount) {
   const unavailable = () => new HttpError(422, 'Shipping is not available for this cart and address yet. No payment has been taken.');
-  if (typeof quoteShipping !== 'function') throw unavailable();
+  if (typeof quoteShipping !== 'function') {
+    if (Number.isSafeInteger(flatAmount) && flatAmount >= 0 && flatAmount <= 100000) {
+      return { items: structuredClone(cart), destination: Object.fromEntries(['address', 'city', 'state', 'postalCode', 'country'].map(key => [key, customer[key]])), currency: 'usd', amount: flatAmount, source: 'Store flat-rate policy', validUntil: new Date(expiresAt * 1000).toISOString(), checkoutEligible: true };
+    }
+    throw unavailable();
+  }
   const destination = Object.fromEntries(['address', 'city', 'state', 'postalCode', 'country'].map(key => [key, customer[key]]));
   let rate;
   try {
@@ -46,7 +51,7 @@ export async function prepareCheckout(body, config, stripe, now = Date.now()) {
   // A Checkout Session lasts at least 30 minutes. The shipping commitment must
   // cover the entire session, not just the moment the review is displayed.
   const expiresAt = Math.floor(now / 1800000) * 1800 + 3600;
-  const shipping = await shippingFor(cart, customer, config.quoteShipping, expiresAt);
+  const shipping = await shippingFor(cart, customer, config.quoteShipping, expiresAt, config.shippingAmount);
   if (!/^pk_test_[A-Za-z0-9]+$/.test(config.publishableKey || '')) {
     throw new HttpError(503, 'Secure payment is being configured. Please try again later.');
   }
