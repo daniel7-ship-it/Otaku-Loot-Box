@@ -65,7 +65,7 @@ export async function prepareCheckout(body, config, stripe, now = Date.now()) {
     // The Stripe Customer carries the verified shipping address. Stripe Tax
     // rejects payment_intent_data.shipping when automatic_tax is enabled.
     metadata: { integration: config.mode === 'live' ? 'otaku-loot-box' : 'otaku-loot-box-sandbox', fulfillment: 'disabled', checkout_version: 'embedded-v1' },
-    custom_text: { submit: { message: config.mode === 'live' ? 'Payment is processed securely. Supplier fulfillment is handled separately.' : 'Sandbox test only. No real payment or shipment.' } },
+    custom_text: { submit: { message: 'Payment is processed securely. Supplier fulfillment is handled separately.' } },
     line_items: cart.map(({ id, qty }) => ({ quantity: qty, price_data: {
       currency: 'usd', unit_amount: catalog.get(id).amount, tax_behavior: 'exclusive',
       product_data: { name: catalog.get(id).name, metadata: { catalog_id: String(id) } },

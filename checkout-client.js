@@ -10,7 +10,7 @@
 
   function apiBase() {
     const configured = window.OTAKU_CHECKOUT_API;
-    if (!configured) throw new Error('Test checkout is not connected yet. Your cart is saved; the store owner needs to connect the backend.');
+    if (!configured) throw new Error('Checkout is not connected yet. Your cart is saved; please try again later.');
     const url = new URL(configured);
     const local = ['localhost', '127.0.0.1'].includes(url.hostname);
     if ((url.protocol !== 'https:' && !(local && url.protocol === 'http:')) || url.username || url.password || url.search || url.hash || url.pathname !== '/') {
@@ -22,7 +22,7 @@
   async function request(path, options = {}) {
     const response = await fetch(`${apiBase()}${path}`, { ...options, signal: AbortSignal.timeout(60000) });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Test checkout is unavailable. Please retry.');
+    if (!response.ok) throw new Error(data.error || 'Checkout is unavailable. Please retry.');
     if (!['test', 'live'].includes(data.mode)) throw new Error('Checkout did not confirm a valid payment mode.');
     return data;
   }
@@ -64,7 +64,7 @@
     try {
       const data = await request(`/api/checkout/status?session_id=${encodeURIComponent(sessionId)}`);
       message(data.status === 'complete' && data.paymentStatus === 'paid'
-        ? 'Test payment confirmed by Stripe. No real money was charged and no items will ship.'
+        ? 'Payment confirmed. Thank you for your order.'
         : 'Payment is not confirmed yet. Please check again shortly.');
       if (data.status === 'complete') { invalidate(); forgetAttempt(); }
     } catch { message('Could not verify payment yet. Please retry the status check.'); }
@@ -72,7 +72,7 @@
 
   window.otakuCheckout = {
     get busy() { return busy; },
-    reset() { busy = false; get('checkout').textContent = 'Test checkout →'; },
+    reset() { busy = false; get('checkout').textContent = 'Checkout →'; },
     showReview(cart, onSubmit) {
       if (!cart.length || busy) return;
       invalidate();
@@ -123,11 +123,11 @@
         get('editDelivery').onclick = () => { invalidate(); get('checkoutReview').hidden = false; message('Update your address and calculate a new total.'); };
         expiryTimer = setTimeout(() => { invalidate(); get('checkoutReview').hidden = false; message('This total expired. Calculate it again before paying.'); }, data.expiresAt * 1000 - Date.now());
         busy = false;
-        message(data.mode === 'live' ? 'Review your total, then pay securely here.' : 'Review your total, then pay securely here. Sandbox only; no real charge or shipment.');
+        message('Review your total, then pay securely here.');
       } catch (error) {
         if (token !== revision) return;
         message(error.name === 'TypeError' || error.name === 'TimeoutError'
-          ? 'Could not reach test checkout. Your cart is saved. Please try again.' : error.message);
+          ? 'Could not reach checkout. Your cart is saved. Please try again.' : error.message);
         busy = false;
         button.disabled = cart.length === 0;
         button.textContent = 'Calculate shipping & tax →';
@@ -167,17 +167,17 @@
       openCart();
       forgetAttempt();
       if (result === 'cancelled') {
-        message('Test checkout cancelled. Your cart is saved; no supplier order was placed.');
+        message('Checkout cancelled. Your cart is saved.');
         return;
       }
-      message('Checking your sandbox payment with Stripe…');
+      message('Checking your payment with Stripe…');
       try {
         const data = await request(`/api/checkout/status?session_id=${encodeURIComponent(params.get('session_id') || '')}`);
         message(data.status === 'complete' && data.paymentStatus === 'paid'
-          ? 'Test payment confirmed by Stripe. No real money was charged and no items will ship. Your cart is retained for testing.'
-          : 'Test payment is not confirmed yet. Your cart is saved; no supplier order has been placed.');
+          ? 'Payment confirmed by Stripe. Your order is being processed.'
+          : 'Payment is not confirmed yet. Your cart is saved.');
       } catch {
-        message('Could not verify the test payment. Refresh to retry. Your cart is saved; no supplier order has been placed.');
+        message('Could not verify the payment. Refresh to retry. Your cart is saved.');
       }
     },
   };

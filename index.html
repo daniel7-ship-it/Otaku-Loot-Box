@@ -226,9 +226,9 @@
     </section>
     <div class="shrink-0 p-6 border-t border-[#ded9cd]">
       <div class="flex justify-between font-semibold"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
-      <p class="text-xs text-[#7d8273] mt-2">Sandbox checkout · Shipping availability is checked for your US delivery address. Review shipping, tax and total before payment. No real charge or shipment.</p>
-      <button id="checkout" class="w-full bg-[#2d4433] text-white py-4 mt-5 font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed">Test checkout →</button>
-      <p id="checkoutMessage" role="status" class="text-xs leading-5 mt-3 text-[#727866]">Sandbox only. Flat $7.00 shipping is added after your address is entered; tax is calculated from your address.</p>
+      <p class="text-xs text-[#7d8273] mt-2">Review shipping, tax, and your total before payment. Flat $7.00 shipping applies to US delivery addresses.</p>
+      <button id="checkout" class="w-full bg-[#2d4433] text-white py-4 mt-5 font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed">Checkout →</button>
+      <p id="checkoutMessage" role="status" class="text-xs leading-5 mt-3 text-[#727866]">Flat $7.00 shipping is added after your address is entered; tax is calculated from your address.</p>
     </div>
   </section>
 
@@ -387,15 +387,6 @@
         description: "A 7-inch Power plush from Chainsaw Man in a compact sitting pose for desks, shelves, and display cases.",
         sourceUrl: "https://www.temu.com/-power-casual-outfit-1-sitting--plush-7-h-g-603070406709704.html"
       },
-      {id:1,name:"One Piece",detail:"Volume 01 · Eiichiro Oda",category:"Manga",price:11.99,label:"START HERE",color:"#c35337",bg:"#f5d27c",word:"ONE\nPIECE",number:"01"},
-      {id:2,name:"Jujutsu Kaisen",detail:"Volume 01 · Gege Akutami",category:"Manga",price:11.99,label:"SHELF ESSENTIAL",color:"#b34a60",bg:"#d7e4d8",word:"JUJUTSU\nKAISEN",number:"01"},
-      {id:3,name:"Satoru Gojo",detail:"Display figure · Sample edition",category:"Figures",price:34.99,label:"DISPLAY WORTHY",color:"#334658",bg:"#e7e6df",figure:true},
-      {id:4,name:"Demon Slayer",detail:"Volume 01 · Koyoharu Gotouge",category:"Manga",price:11.99,color:"#33736b",bg:"#d3ded1",word:"DEMON\nSLAYER",number:"01"},
-      {id:5,name:"The Amazing Spider-Man",detail:"Comic book · Sample issue",category:"Comics",price:5.99,label:"COMIC CORNER",color:"#b94736",bg:"#bcd5dc",word:"AMAZING\nSPIDER-MAN",number:"#1"},
-      {id:6,name:"Monkey D. Luffy",detail:"Display figure · Sample edition",category:"Figures",price:39.99,color:"#be563e",bg:"#e7dfcd",figure:true},
-      {id:7,name:"Chainsaw Man",detail:"Volume 01 · Tatsuki Fujimoto",category:"Manga",price:11.99,color:"#dc6632",bg:"#cbd68b",word:"CHAINSAW\nMAN",number:"01"},
-      {id:8,name:"Batman",detail:"Comic book · Sample issue",category:"Comics",price:5.99,color:"#333f58",bg:"#c9c6c0",word:"BATMAN",number:"#1"},
-      {id:9,name:"Acrylic Display Case",detail:"Clear display · Sample size",category:"Accessories",price:19.99,label:"PROTECT YOUR LOOT",color:"#536655",bg:"#e5e1d7",accessory:true}
     ];
     const $ = id => document.getElementById(id);
     const money = n => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(n);
@@ -513,7 +504,7 @@
       $("reviewSubtotal").textContent=money(itemTotal);
       $("reviewTotal").textContent=money(itemTotal);
       $("checkout").disabled=cart.length===0 || window.otakuCheckout.busy;
-      if (!window.otakuCheckout.busy) $("checkoutMessage").textContent="Sandbox only. No real payments or supplier orders.";
+      if (!window.otakuCheckout.busy) $("checkoutMessage").textContent="Flat $7.00 shipping applies; tax is calculated from your address.";
       $("cartItems").innerHTML=cart.length?cart.map(item=>{
         const p=catalog.find(p=>p.id===item.id);
         return `<div class="flex gap-4 pb-6 mb-6 border-b border-[#e5e0d4]">

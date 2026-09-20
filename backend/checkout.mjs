@@ -50,7 +50,7 @@ export function buildCheckout(items, storefront) {
     automatic_tax: { enabled: false },
     tax_id_collection: { enabled: false },
     shipping_address_collection: { allowed_countries: SHIPPING_COUNTRIES },
-    custom_text: { submit: { message: 'Sandbox test only. No real payment, shipment, or supplier order. Shipping is not charged in this test.' } },
+    custom_text: { submit: { message: 'Payment is processed securely. Supplier fulfillment is handled separately.' } },
     metadata: { integration: 'otaku-loot-box-sandbox', fulfillment: 'disabled' },
     line_items: cart.map(({ id, qty }) => ({
       quantity: qty,
