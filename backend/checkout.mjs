@@ -81,7 +81,7 @@ export function createStripeClient(secret, fetchImpl = fetch) {
     if (!response.ok) {
       let detail = {};
       try { detail = await response.json(); } catch {}
-      console.error(JSON.stringify({ event: 'stripe_request_failed', path, status: response.status, type: detail?.error?.type, code: detail?.error?.code, param: detail?.error?.param }));
+      console.error(JSON.stringify({ event: 'stripe_request_failed', path, status: response.status, type: detail?.error?.type, code: detail?.error?.code, param: detail?.error?.param, message: detail?.error?.message }));
       throw new HttpError(502, 'Stripe is unavailable or backend configuration needs attention. Please retry.');
     }
     return response.json();
