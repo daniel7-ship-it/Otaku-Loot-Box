@@ -78,7 +78,12 @@ export function createStripeClient(secret, fetchImpl = fetch) {
       body: body ? encodeForm(body) : undefined,
       signal: AbortSignal.timeout(15000),
     });
-    if (!response.ok) throw new HttpError(502, 'Stripe is unavailable or backend configuration needs attention. Please retry.');
+    if (!response.ok) {
+      let detail = {};
+      try { detail = await response.json(); } catch {}
+      console.error(JSON.stringify({ event: 'stripe_request_failed', path, status: response.status, type: detail?.error?.type, code: detail?.error?.code, param: detail?.error?.param }));
+      throw new HttpError(502, 'Stripe is unavailable or backend configuration needs attention. Please retry.');
+    }
     return response.json();
   };
 }
