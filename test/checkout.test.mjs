@@ -105,6 +105,9 @@ test('new anime, DC, and Marvel products are purchasable while Funko products st
   assert.equal(newProducts.filter(product => product.tags.includes('Marvel')).length, 4);
   assert.ok(newProducts.every(product => !/funko/i.test(product.name)));
   assert.ok(newProducts.every(product => catalog.has(product.id)));
+  assert.ok(newProducts.every(product => product.image && product.images?.[0] === product.image &&
+    product.images.every(image => image.startsWith('https://'))));
+  assert.equal(newProducts.reduce((count, product) => count + product.images.length, 0), 69);
 });
 
 test('checkout stays limited to ten distinct products after catalog expansion', () => {
