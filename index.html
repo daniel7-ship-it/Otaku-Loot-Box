@@ -44,6 +44,13 @@
     .filter-btn.active .filter-count{background:#fff}
     #loot-boxes .loot-box-card{background:#fffdf7;border:1px solid #ded8cb;transition:transform .2s,box-shadow .2s}
     #loot-boxes .loot-box-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px #263a3015}
+    #loot-boxes .loot-box-art{display:block;width:100%;overflow:hidden;border:0;background:#222;cursor:pointer}
+    #loot-boxes .loot-box-art img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;transition:transform .45s,filter .35s}
+    #loot-boxes .loot-box-art:hover img,#loot-boxes .loot-box-art:focus-visible img{transform:scale(1.045);filter:brightness(1.12)}
+    #lootBoxDialog .loot-item-thumb{border:2px solid transparent;transition:border-color .15s,transform .15s}
+    #lootBoxDialog .loot-item-thumb:hover{transform:translateY(-2px)}
+    #lootBoxDialog .loot-item-thumb[aria-pressed="true"]{border-color:#344332}
+    #lootBoxDialog .loot-item-thumb img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#eee9df}
     #lootBoxDialog::backdrop{background:#17231dcc;backdrop-filter:blur(3px)}
     #lootBoxDialog{border:1px solid #d8c9ae;background:#fbfaf5;color:var(--ink);max-height:min(88vh,760px)}
     .cart-panel{transform:translateX(100%);transition:transform .3s ease}
@@ -289,42 +296,42 @@
   // purchasable catalog and can never be added to checkout.
   const boxes = [
     { id: "jujutsu-kaisen", name: "Jujutsu Kaisen", family: "Anime", accent: "#586b65", candidates: [
-      "Satoru Gojo · Shibuya Incident pin", "Kento Nanami · Shibuya Incident pin", "Yuji Itadori · Shibuya Incident pin", "Nobara Kugisaki · Shibuya Incident pin", "Megumi Fushiguro · Shibuya Incident pin",
-      "Satoru Gojo · Shibuya Incident acrylic keychain", "Kento Nanami · Shibuya Incident acrylic keychain", "Yuji Itadori · Shibuya Incident acrylic keychain", "Nobara Kugisaki · Shibuya Incident acrylic keychain", "Megumi Fushiguro · Shibuya Incident acrylic keychain"
-    ] },
+      "Satoru Gojo pin", "Kento Nanami pin", "Yuji Itadori pin", "Nobara Kugisaki pin", "Megumi Fushiguro pin",
+      "Satoru Gojo keychain", "Kento Nanami keychain", "Yuji Itadori keychain", "Nobara Kugisaki keychain", "Megumi Fushiguro keychain"
+    ], images: ["https://cdn.shopify.com/s/files/1/0740/7527/5579/files/4570115628674.jpg?v=1762447993","https://cdn.shopify.com/s/files/1/0740/7527/5579/files/4570115628674.jpg?v=1762447993","https://cdn.shopify.com/s/files/1/0740/7527/5579/files/4570115628674.jpg?v=1762447993","https://cdn.shopify.com/s/files/1/0740/7527/5579/files/4570115628674.jpg?v=1762447993","https://cdn.shopify.com/s/files/1/0740/7527/5579/files/4570115628674.jpg?v=1762447993","https://cdn.shopify.com/s/files/1/0740/7527/5579/files/4570115628681.jpg?v=1762447987","https://cdn.shopify.com/s/files/1/0740/7527/5579/files/4570115628681.jpg?v=1762447987","https://cdn.shopify.com/s/files/1/0740/7527/5579/files/4570115628681.jpg?v=1762447987","https://cdn.shopify.com/s/files/1/0740/7527/5579/files/4570115628681.jpg?v=1762447987","https://cdn.shopify.com/s/files/1/0740/7527/5579/files/4570115628681.jpg?v=1762447987"] },
     { id: "naruto", name: "Naruto", family: "Anime", accent: "#b8733e", candidates: [
-      "Naruto Uzumaki · NRZ06-SSR-151L3", "Zabuza Momochi · NRB07-UR-135L3", "Kakashi Hatake · NRB07-UR-134L3", "Chocho Akimichi · NRB07-SSR-176L3", "Sasuke Uchiha · NRB07-SSR-171L3",
-      "Iruka · NRB07-SSR-170L3", "Naruto Uzumaki · NRB07-SSR-168L3", "Naruto Uzumaki · NRB07-SSR-167L3", "Naruto Uzumaki · NRB07-SSR-165L3", "Sasuke Uchiha · NRB07-SSR-164L3"
-    ] },
+      "Naruto card", "Zabuza card", "Kakashi card", "Chocho card", "Sasuke card",
+      "Iruka card", "Naruto card", "Naruto card", "Naruto card", "Sasuke card"
+    ], images: ["https://cdn.shopify.com/s/files/1/0621/6135/4818/files/IMG_7214.jpg?v=1755188491","https://cdn.shopify.com/s/files/1/0621/6135/4818/files/IMG_6903.jpg?v=1755191954","https://cdn.shopify.com/s/files/1/0621/6135/4818/files/IMG_6902.jpg?v=1755191952","https://cdn.shopify.com/s/files/1/0621/6135/4818/files/IMG_6934.jpg?v=1755192005","https://cdn.shopify.com/s/files/1/0621/6135/4818/files/IMG_6929.jpg?v=1755191998","https://cdn.shopify.com/s/files/1/0621/6135/4818/files/IMG_6928.jpg?v=1755191996","https://cdn.shopify.com/s/files/1/0621/6135/4818/files/IMG_6926.jpg?v=1755191993","https://cdn.shopify.com/s/files/1/0621/6135/4818/files/IMG_6925.jpg?v=1755191991","https://cdn.shopify.com/s/files/1/0621/6135/4818/files/IMG_6923.jpg?v=1755191989","https://cdn.shopify.com/s/files/1/0621/6135/4818/files/IMG_6922.jpg?v=1755191987"] },
     { id: "one-piece", name: "One Piece", family: "Anime", accent: "#517a83", candidates: [
-      "Usopp · OP17-080 · near mint foil", "Yasopp · OP17-031 · near mint foil", "Gloriosa · OP17-046 · near mint foil", "Charlotte Pudding · OP17-109 · near mint foil", "Shanks · OP17-022 · near mint foil",
-      "Don!! card · Rocks alternate art · near mint", "Yamato · OP17-074 · near mint foil", "Yamato · OP16-098 · near mint foil", "Nami · OP15-086 · near mint foil", "Vander Decken IX · OP06-033 · near mint foil"
-    ] },
+      "Usopp foil card", "Yasopp foil card", "Gloriosa foil card", "Charlotte Pudding foil card", "Shanks foil card",
+      "Rocks alternate-art card", "Yamato foil card", "Yamato foil card", "Nami foil card", "Vander Decken IX foil card"
+    ], images: ["https://cdn.shopify.com/s/files/1/0565/8715/7609/files/711426_in_1000x1000_f7380ffb-50a1-496c-aff7-9d6a6fa914b3.jpg?v=1787633677","https://cdn.shopify.com/s/files/1/0565/8715/7609/files/711422_in_1000x1000_60db0418-5e1c-40d2-8b91-ea76e32d2291.jpg?v=1787633828","https://cdn.shopify.com/s/files/1/0565/8715/7609/files/710541.jpg?v=1789195904","https://cdn.shopify.com/s/files/1/0565/8715/7609/files/708074.jpg?v=1789195705","https://cdn.shopify.com/s/files/1/0565/8715/7609/files/707120.jpg?v=1789196561","https://cdn.shopify.com/s/files/1/0565/8715/7609/files/712749.jpg?v=1789809424","https://cdn.shopify.com/s/files/1/0565/8715/7609/files/710615.jpg?v=1789196739","https://cdn.shopify.com/s/files/1/0565/8715/7609/files/694640.jpg?v=1782517655","https://cdn.shopify.com/s/files/1/0565/8715/7609/files/685438.jpg?v=1780019223","https://cdn.shopify.com/s/files/1/0565/8715/7609/files/539782.jpg?v=1785803694"] },
     { id: "bleach", name: "Bleach", family: "Anime", accent: "#725f86", note: "Some early card candidates are listed as lightly played; condition must be approved before any final lineup.", candidates: [
-      "Uryu Ishida · Quincy Cross pin", "Quincy Cross · Bleach pin", "Renji Abarai · Union Arena card · lightly played", "Byakuya Kuchiki · Winner card · lightly played", "Ichigo Kurosaki · participation card · lightly played",
-      "Byakuya Kuchiki · Union Arena card · lightly played", "Yachiru Kusajishi · Union Arena card · lightly played", "Genryusai Yamamoto · Union Arena card · lightly played", "Ichigo Kurosaki · Union Arena card · lightly played", "Toshiro Hitsugaya · Union Arena card · lightly played"
-    ] },
+      "Uryu Ishida pin", "Quincy Cross pin", "Renji Abarai card · lightly played", "Byakuya Kuchiki card · lightly played", "Ichigo Kurosaki card · lightly played",
+      "Byakuya Kuchiki card · lightly played", "Yachiru Kusajishi card · lightly played", "Genryusai Yamamoto card · lightly played", "Ichigo Kurosaki card · lightly played", "Toshiro Hitsugaya card · lightly played"
+    ], images: ["https://eknightmedia.com/media/catalog/product/p/i/pins-bleach-uryu-and-quincy-cross-set-of-2.jpg","https://eknightmedia.com/media/catalog/product/p/i/pins-bleach-uryu-and-quincy-cross-set-of-2.jpg","https://cdn.shopify.com/s/files/1/0919/1325/7245/files/632160.jpg?v=1760017316","https://cdn.shopify.com/s/files/1/0919/1325/7245/files/583716.jpg?v=1760017240","https://cdn.shopify.com/s/files/1/0919/1325/7245/files/584235.jpg?v=1760017239","https://cdn.shopify.com/s/files/1/0919/1325/7245/files/632162.jpg?v=1776878516","https://cdn.shopify.com/s/files/1/0919/1325/7245/files/584419.jpg?v=1760017247","https://cdn.shopify.com/s/files/1/0919/1325/7245/files/580960.jpg?v=1760017245","https://cdn.shopify.com/s/files/1/0919/1325/7245/files/563734.jpg?v=1760017239","https://cdn.shopify.com/s/files/1/0919/1325/7245/files/601039.jpg?v=1760017309"] },
     { id: "spy-x-family", name: "SPY x FAMILY", family: "Anime", accent: "#b77d69", candidates: [
-      "Bond · winter pin", "Anya Forger · winter pin", "Yor Forger · winter pin", "Loid Forger · winter pin",
-      "Fake Family, Loid & Anya & Yor · SR near-mint card", "Family Celebration · RRR near-mint card", "First Stella, Anya · SR near-mint card",
-      "For the Sake of Peace, Loid · RRR near-mint card", "On the Phone with Allies, Loid · foil near-mint card", "Morning Moment, Yor · near-mint card"
-    ] },
+      "Bond winter pin", "Anya winter pin", "Yor winter pin", "Loid winter pin",
+      "Fake Family card", "Family Celebration card", "Anya First Stella card",
+      "Loid For the Sake of Peace card", "Loid on the Phone card", "Yor Morning Moment card"
+    ], images: ["https://cdn.shopify.com/s/files/1/0740/7527/5579/files/4570115625857.jpg?v=1762447981","https://cdn.shopify.com/s/files/1/0740/7527/5579/files/4570115625857.jpg?v=1762447981","https://cdn.shopify.com/s/files/1/0740/7527/5579/files/4570115625857.jpg?v=1762447981","https://cdn.shopify.com/s/files/1/0740/7527/5579/files/4570115625857.jpg?v=1762447981","https://totalcards.net/cdn/shop/files/wss106-014.jpg?v=1711637854","https://www.tcgplayer.com/product/532280/weiss-schwarz-spy-x-family-first-stella-anya-sr","https://totalcards.net/cdn/shop/files/wss106-014.jpg?v=1711637854","https://www.tcgplayer.com/product/532452/weiss-schwarz-spy-x-family-for-the-sake-of-peace-loid-rrr","https://www.manasource.net/data/manasource/product/wsbpspfa58.jpg","https://www.tcgplayer.com/categories/trading-and-collectible-card-games/weiss-schwarz/price-guides/spy-x-family"] },
     { id: "spider-man", name: "Spider-Man", family: "Marvel", accent: "#a84f49", candidates: [
-      "Miles Morales: Spider-Man #37 · Peach Momoko variant", "Amazing Spider-Man #68.Deaths", "Amazing Spider-Man #58 · Chris Allen variant", "Miles Morales: Spider-Man #41 · Luigi Zagaria variant", "Amazing Spider-Man #63 · Rafael Albuquerque variant",
-      "Radioactive Spider-Man #3 · Mike McKone variant", "Spider-Man Noir #5 · Erik Larsen variant", "Amazing Spider-Man #67 · Roge Antonio variant", "Radioactive Spider-Man #2", "Miles Morales: Spider-Man #35 · Logan Lubera variant"
-    ] },
+      "Miles Morales comic · Peach Momoko cover", "Amazing Spider-Man comic · Deaths cover", "Amazing Spider-Man comic · Chris Allen cover", "Miles Morales comic · Luigi Zagaria cover", "Amazing Spider-Man comic · Rafael Albuquerque cover",
+      "Radioactive Spider-Man comic · Mike McKone cover", "Spider-Man Noir comic · Erik Larsen cover", "Amazing Spider-Man comic · Roge Antonio cover", "Radioactive Spider-Man comic", "Miles Morales comic · Logan Lubera cover"
+    ], images: ["https://cdn.shopify.com/s/files/1/0190/2418/3360/files/75960620483003721.jpg?v=1755967190","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/75960621190606811.jpg?v=1739389276","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/STL329660_cf227ba8-997b-48e3-85f2-847b687cd5c6.jpg?v=1730407537","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/75960620483004131.jpg?v=1763141428","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/STL344462_e51e83ba-b6bd-4ece-81f3-e900026527b7.jpg?v=1730858991","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/75960621372600321.jpg?v=1788972147","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/75960621322100521.jpg?v=1788972079","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/75960620200306731.jpg?v=1739253571","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/75960621372600211.jpg?v=1762348220","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/75960620483003521.jpg?v=1750684982"] },
     { id: "avengers", name: "Avengers", family: "Marvel", accent: "#aa8148", candidates: [
-      "Avengers Assemble #4", "Avengers #26", "Avengers #20 · Sergio Davila variant", "Avengers #21 · Matteo Lolli variant", "Avengers #22 · Todd Nauck variant",
-      "West Coast Avengers #9 · Scott Godlewski variant", "Superior Avengers #2 · Iban Coello variant", "Uncanny Avengers #17", "West Coast Avengers #8 · Godtail variant", "Avengers #19 · Paco Medina variant"
-    ] },
+      "Avengers Assemble comic", "Avengers comic", "Avengers comic · Sergio Davila cover", "Avengers comic · Matteo Lolli cover", "Avengers comic · Todd Nauck cover",
+      "West Coast Avengers comic · Scott Godlewski cover", "Superior Avengers comic · Iban Coello cover", "Uncanny Avengers comic", "West Coast Avengers comic · Godtail cover", "Avengers comic · Paco Medina cover"
+    ], images: ["https://cdn.shopify.com/s/files/1/0190/2418/3360/files/STL341961.jpg?v=1733797698","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/75960620426702611.jpg?v=1747178824","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/STL340671_6b17e505-a5fa-484e-96a5-3a1999d4fa19.jpg?v=1731445993","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/STL341959.jpg?v=1733797691","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/75960620426702241.jpg?v=1735344803","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/75960620969900931.jpg?v=1759565791","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/75960620968200231.jpg?v=1746636322","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/ce_355444_0_RagnarokNow.jpg?v=1751581321","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/75960620969900831.jpg?v=1749138761","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/STL333643_99936d33-b99f-441e-80c9-a925564712c2.jpg?v=1730859336"] },
     { id: "batman", name: "Batman", family: "DC", accent: "#596b62", candidates: [
-      "Batman #157 · Tony S. Daniel variant", "All Star Batman #11", "Batman / Superman Vol. 2 #21B", "Batman #114 · Jorge Molina variant", "Batman #109 · Joshua Middleton variant",
-      "Batman Faze Clan #1 · Jason Badower variant", "Batman #162 · Gabriele Dell'Otto variant", "Batman and Robin #18", "Batman Superman: World's Finest #36", "Batman Superman: World's Finest #42"
-    ] },
+      "Batman comic · Tony S. Daniel cover", "All Star Batman comic", "Batman / Superman comic", "Batman comic · Jorge Molina cover", "Batman comic · Joshua Middleton cover",
+      "Batman FaZe Clan comic · Jason Badower cover", "Batman comic · Gabriele Dell'Otto cover", "Batman and Robin comic", "Batman: World's Finest comic", "Batman: World's Finest comic"
+    ], images: ["https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202409-0000473892.jpg?v=1737765503","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202008-0000200805.jpg?v=1755653077","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/b3_772075_0_BatmanSupermanVol221B_9ab42f64-9ee5-4ab4-a5af-b145b68c328c.webp?v=1755192118","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202107-0000351825.jpg?v=1755653024","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202103-0000341046.jpg?v=1755653033","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202112-0000368143.jpg?v=1755475163","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202504-0000497331.jpg?v=1762185025","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202411-0000479214.jpg?v=1738376016","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202411-0000479226.jpg?v=1738990330","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202505-0000501883.jpg?v=1754760799"] },
     { id: "dc-heroes", name: "DC Heroes", family: "DC", accent: "#557d86", candidates: [
-      "The Terrifics #10", "Cyborg #14", "Supergirl #1 · Nicola Scott variant", "Teen Titans Go! #5", "Green Lantern #38 · Jessica Luna variant",
-      "Secret Six #2", "Secret Six #5", "New History of the DC Universe #3", "Superman: Lex Luthor Special #1", "Justice League: The Atom Project #1"
-    ] }
+      "The Terrifics comic", "Cyborg comic", "Supergirl comic · Nicola Scott cover", "Teen Titans Go! comic", "Green Lantern comic · Jessica Luna cover",
+      "Secret Six comic", "Secret Six comic", "New History of the DC Universe comic", "Superman: Lex Luthor Special comic", "Justice League: The Atom Project comic"
+    ], images: ["https://cdn.shopify.com/s/files/1/0190/2418/3360/files/5c_584211_0_PartFour.webp?v=1753840103","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/ca_489001_0_CyborgVol214A.webp?v=1755653465","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202503-0000493294.jpg?v=1746380489","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202504-0000497852.jpg?v=1750528643","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/0626DC0136_0bde8180-4105-4e37-b876-c4d9837b1d4a.jpg?v=1787116823","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202501-0000488748.jpg?v=1742819887","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202504-0000497790.jpg?v=1750528640","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202505-0000502133.jpg?v=1757791034","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202410-0000477954.jpg?v=1737485974","https://cdn.shopify.com/s/files/1/0190/2418/3360/files/202410-0000477891.jpg?v=1734928674"] }
   ];
 
   const grid = document.getElementById("lootBoxGrid");
@@ -341,6 +348,7 @@
   grid.innerHTML = boxes.map((box) => {
     const lineup = box.candidates.length;
     return `<article class="loot-box-card p-5 sm:p-6 flex flex-col min-h-[220px]">
+      <button type="button" class="loot-box-art -mx-5 sm:-mx-6 -mt-5 sm:-mt-6 mb-4 w-[calc(100%+2.5rem)] sm:w-[calc(100%+3rem)]" data-box-id="${box.id}" aria-label="Open ${escapeHtml(box.name)} loot box preview" aria-haspopup="dialog"><img src="assets/loot-box.png" alt="The Loot boxes treasure chest" loading="lazy"></button>
       <div class="flex items-start justify-between gap-3"><span class="text-[10px] tracking-[.18em] font-bold text-[#7b8073]">${escapeHtml(box.family.toUpperCase())}</span><span aria-hidden="true" class="w-3 h-3 rounded-full mt-0.5" style="background:${box.accent}"></span></div>
       <h3 class="display text-3xl font-semibold mt-4">${escapeHtml(box.name)}</h3>
       <p class="text-xs text-[#727667] mt-2">${lineup ? `${lineup} preview ${lineup === 1 ? "item" : "items"} identified · lineup in progress` : "Selection in progress"}</p>
@@ -355,9 +363,18 @@
     if (!box) return;
     title.textContent = `${box.name} Loot box`;
     const items = box.candidates.length
-      ? `<h4 class="text-sm font-semibold">Preview candidates (${box.candidates.length} identified; 10 needed)</h4><ul class="grid sm:grid-cols-2 gap-x-6 gap-y-2 mt-4 text-sm">${box.candidates.map((item) => `<li class="border-b border-[#e8e2d6] py-2">${escapeHtml(item)}</li>`).join("")}</ul>`
+      ? `<h4 class="text-sm font-semibold">Preview items (${box.candidates.length})</h4><div class="grid sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-5 mt-4"><div class="border border-[#e8e2d6] bg-white p-3"><img id="lootBoxSelectedImage" class="w-full max-h-64 object-contain bg-[#f0ede6]" src="${escapeHtml(box.images[0])}" alt="${escapeHtml(box.candidates[0])}"/><p id="lootBoxSelectedName" class="text-sm font-semibold mt-3">${escapeHtml(box.candidates[0])}</p></div><div class="grid grid-cols-3 sm:grid-cols-2 gap-2 max-h-80 overflow-y-auto">${box.candidates.map((item,index) => `<button type="button" class="loot-item-thumb text-left bg-white p-1" data-item-index="${index}" aria-pressed="${index===0}" aria-label="Preview ${escapeHtml(item)}"><img src="${escapeHtml(box.images[index])}" alt="" loading="lazy"><span class="block text-[11px] leading-4 p-1">${escapeHtml(item)}</span></button>`).join("")}</div></div>`
       : `<div class="border border-dashed border-[#cfc5b2] p-5 text-sm"><p class="font-semibold">Selection in progress</p><p class="text-[#727667] mt-2">We’re checking suitable items and current US availability for this theme.</p></div>`;
-    content.innerHTML = `<p class="text-sm leading-6 text-[#5d685e] mb-5">A proposed opening is $10 and awards one physical item. Openings are not available yet.</p>${items}${box.note ? `<p class="text-xs leading-5 text-[#727667] mt-5">${escapeHtml(box.note)}</p>` : ""}<p class="text-xs leading-5 text-[#727667] mt-5">Preview items are not reserved inventory. The final lineup may change as inventory is secured.</p>`;
+    content.innerHTML = `<p class="text-sm leading-6 text-[#5d685e] mb-5">A $10 opening awards one item from this pictured lineup. Openings are not available yet.</p>${items}${box.note ? `<p class="text-xs leading-5 text-[#727667] mt-5">${escapeHtml(box.note)}</p>` : ""}`;
+    content.querySelectorAll("[data-item-index]").forEach((thumb) => thumb.addEventListener("click", () => {
+      const index = Number(thumb.dataset.itemIndex);
+      content.querySelectorAll("[data-item-index]").forEach((button) => button.setAttribute("aria-pressed", String(button === thumb)));
+      const selectedImage = content.querySelector("#lootBoxSelectedImage");
+      const selectedName = content.querySelector("#lootBoxSelectedName");
+      selectedImage.src = box.images[index];
+      selectedImage.alt = box.candidates[index];
+      selectedName.textContent = box.candidates[index];
+    }));
     dialog.showModal();
   });
 
