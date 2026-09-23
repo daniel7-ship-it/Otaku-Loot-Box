@@ -10,6 +10,19 @@ const storefrontCatalog = new Map([
   [16, { name: "Gojo & Geto Sitting Figures", amount: 3555, origin: "https://www.etsy.com/listing/4563978230/gojo-satoru-suguru-geto-sitting-figures" }],
   [17, { name: "Pirate Crew Plushies", amount: 3699, origin: "https://www.etsy.com/listing/4544915599/pirate-anime-plushies" }],
   [18, { name: "Power Sitting Plush", amount: 2499, origin: "https://www.temu.com/-power-casual-outfit-1-sitting--plush-7-h-g-603070406709704.html" }],
+  [19, { name: "Jujutsu Kaisen Geto Bear 6-inch Plush", amount: 2000, origin: "https://tohoanimationstore.us/products/jujutsu-kaisen-geto-bear-6-plush" }],
+  [20, { name: "Jujutsu Kaisen Megumi Divine Dogs Black Hound Plush", amount: 2500, origin: "https://tohoanimationstore.us/products/jujutsu-kaisen-megumi-divine-dogs-black-hound-8-plush" }],
+  [21, { name: "Jujutsu Kaisen Shibuya Incident 5-Piece Pin Set", amount: 1500, origin: "https://tohoanimationstore.us/products/jujutsu-kaisen-shibuya-incident-5-piece-pin-set" }],
+  [22, { name: "Jujutsu Kaisen Shibuya Incident 5-Piece Acrylic Keychain Set", amount: 2000, origin: "https://tohoanimationstore.us/products/jujutsu-kaisen-shibuya-incident-5-piece-acrylic-keychain-set" }],
+  [23, { name: "SPY x FAMILY 4-Piece Pin Set", amount: 1200, origin: "https://tohoanimationstore.us/products/spy-x-family-4-piece-pin-set" }],
+  [24, { name: "Frieren: Beyond Journey's End Fuwa Petit Plush", amount: 2000, origin: "https://tohoanimationstore.us/products/frieren-beyond-journeys-end-frieren-fuwa-petit-plush" }],
+  [25, { name: "My Hero Academia Izuku Midoriya Post-Final War Figure", amount: 2299, origin: "https://tohoanimationstore.us/products/my-hero-academia-izuku-midoriya-post-final-war-figure" }],
+  [26, { name: "Batman Mask Light", amount: 3795, origin: "https://shop.dc.com/products/batman-mask-light" }],
+  [27, { name: "Superman: The Movie (1978) McFarlane DC Multiverse Deluxe Figure", amount: 3499, origin: "https://shop.dc.com/products/superman-the-movie-1978-mcfarlane-toys-dc-multiverse-deluxe-theatrical-edition-superman-action-figure" }],
+  [28, { name: "Marvel Legends Secret Wars Constrictor", amount: 2799, origin: "https://www.hasbropulse.com/product/marvel-legends-series-secret-wars-constrictor/G24155X01" }],
+  [29, { name: "Marvel Legends Avengers Iron Spider (Aaron Davis)", amount: 3499, origin: "https://www.hasbropulse.com/product/marvel-legends-series-avengers-iron-spider-aaron-davis/G20885L00" }],
+  [30, { name: "Marvel Legends Spider-Gwen (Across the Spider-Verse)", amount: 2499, origin: "https://www.hasbropulse.com/product/marvel-legends-series-spider-gwen-action-figure/F91755X00.html" }],
+  [31, { name: "Marvel Legends Ultimate Miles Morales Spider-Man", amount: 2499, origin: "https://www.hasbropulse.com/product/marvel-legends-series-ultimate-miles-morales-spiderman/G15915X00" }],
 ]);
 
 // Legacy IDs remain resolvable for old orders and test fixtures, but are not

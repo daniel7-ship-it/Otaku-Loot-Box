@@ -94,6 +94,24 @@ test('backend catalog matches the current storefront and inline scripts parse', 
   for (const [, script] of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) new vm.Script(script);
 });
 
+test('new anime, DC, and Marvel products are purchasable while Funko products stay excluded', () => {
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const source = html.match(/const catalog = (\[[\s\S]*?\n    \]);/)[1];
+  const products = vm.runInNewContext(source);
+  const newProducts = products.filter(product => product.id >= 19 && product.id <= 31);
+  assert.equal(newProducts.length, 13);
+  assert.equal(newProducts.filter(product => product.tags.includes('Anime')).length, 7);
+  assert.equal(newProducts.filter(product => product.tags.includes('DC')).length, 2);
+  assert.equal(newProducts.filter(product => product.tags.includes('Marvel')).length, 4);
+  assert.ok(newProducts.every(product => !/funko/i.test(product.name)));
+  assert.ok(newProducts.every(product => catalog.has(product.id)));
+});
+
+test('checkout stays limited to ten distinct products after catalog expansion', () => {
+  const products = Array.from({ length: 11 }, (_, index) => ({ id: index + 10, qty: 1 }));
+  assert.throws(() => buildCheckout(products, config.storefront), /1 and 10 different products/);
+});
+
 function clientHarness(search = '') {
   const nodes = new Map(['checkout', 'checkoutMessage', 'checkoutReview', 'orderReview', 'paymentPanel', 'reviewSubmit', 'final-subtotal', 'final-shipping', 'final-tax', 'final-total', 'deliverySummary', 'payOnSite', 'editDelivery', 'verifyPayment'].map(id => [id, { textContent: '', disabled: false }]));
   const storage = new Map();

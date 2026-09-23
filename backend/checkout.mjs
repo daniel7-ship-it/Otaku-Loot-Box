@@ -27,7 +27,7 @@ export function validateConfig(env) {
 }
 
 export function normalizeCart(items) {
-  if (!Array.isArray(items) || !items.length || items.length > catalog.size) {
+  if (!Array.isArray(items) || !items.length || items.length > Math.min(catalog.size, 10)) {
     throw new HttpError(400, 'Choose between 1 and 10 different products.');
   }
   const seen = new Set();
