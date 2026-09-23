@@ -42,6 +42,10 @@
     .product-stage{background:radial-gradient(ellipse at top,#fffefb,#eae4d8);border-bottom:8px solid #ddc09a}
     .filter-btn.active{background:#eee6d7;font-weight:700}
     .filter-btn.active .filter-count{background:#fff}
+    #loot-boxes .loot-box-card{background:#fffdf7;border:1px solid #ded8cb;transition:transform .2s,box-shadow .2s}
+    #loot-boxes .loot-box-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px #263a3015}
+    #lootBoxDialog::backdrop{background:#17231dcc;backdrop-filter:blur(3px)}
+    #lootBoxDialog{border:1px solid #d8c9ae;background:#fbfaf5;color:var(--ink);max-height:min(88vh,760px)}
     .cart-panel{transform:translateX(100%);transition:transform .3s ease}
     .cart-panel.open{transform:translateX(0)}
     .grain{background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23887755' opacity='.045' filter='url(%23n)' d='M0 0h180v180H0z'/%3E%3C/svg%3E")}
@@ -96,6 +100,7 @@
       </a>
       <nav aria-label="Main navigation" class="hidden md:flex gap-7 text-sm font-semibold">
         <a href="#shop" data-nav-category="All loot" class="hover:text-[#9c742a]">All loot</a>
+        <a href="#loot-boxes" class="hover:text-[#9c742a]">Loot boxes</a>
         <a href="#shop" data-nav-category="Anime" class="hover:text-[#9c742a]">Anime</a>
         <a href="#shop" data-nav-category="Figures" class="hover:text-[#9c742a]">Figures & collectibles</a>
         <a href="#shop" data-nav-category="Plushies" class="hover:text-[#9c742a]">Plushies</a>
@@ -141,6 +146,16 @@
     </div>
 
 
+
+    <section id="loot-boxes" class="max-w-[1440px] mx-auto px-5 lg:px-12 py-14 lg:py-20 scroll-mt-28" aria-labelledby="lootBoxesTitle">
+      <div class="max-w-3xl mb-9">
+        <p class="text-[10px] tracking-[.2em] font-bold text-[#8a795b] mb-2">A NEW WAY TO FIND YOUR NEXT FAVORITE</p>
+        <h2 id="lootBoxesTitle" class="display text-5xl sm:text-6xl font-semibold">Loot boxes</h2>
+        <p class="text-sm sm:text-base leading-7 text-[#6f7469] mt-4">One $10 opening will award one item from a previewed lineup. We’re still checking availability and building each collection, so openings aren’t available yet.</p>
+      </div>
+      <div id="lootBoxGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      <p class="text-xs leading-5 text-[#727667] mt-6">Preview candidates are not reserved inventory. Each box will open only after its full lineup and fulfillment are confirmed.</p>
+    </section>
 
     <section id="shop" class="max-w-[1440px] mx-auto px-5 lg:px-12 py-12 lg:py-16 scroll-mt-28">
       <div class="flex justify-between items-end gap-4 mb-9">
@@ -209,6 +224,14 @@
     </section>
   </main>
 
+  <dialog id="lootBoxDialog" class="w-[min(92vw,680px)] p-0 shadow-2xl" aria-labelledby="lootBoxDialogTitle">
+    <div class="flex items-start justify-between gap-5 border-b border-[#ded9cd] px-6 py-5 sm:px-8">
+      <div><p class="text-[10px] tracking-[.2em] font-bold text-[#8a795b]">LOOT BOX PREVIEW</p><h3 id="lootBoxDialogTitle" class="display text-4xl font-semibold mt-1"></h3></div>
+      <button id="lootBoxDialogClose" type="button" class="shrink-0 border border-[#d9d6c9] px-3 py-2 text-sm" aria-label="Close loot box preview">Close</button>
+    </div>
+    <div id="lootBoxDialogContent" class="p-6 sm:p-8"></div>
+  </dialog>
+
   <footer class="border-t border-[#ded9cd] px-6 lg:px-12 py-8">
     <div class="max-w-[1344px] mx-auto flex flex-wrap justify-between items-center gap-5">
       <div><p class="display text-xl font-bold tracking-wide">OTAKU LOOT BOX</p><p class="text-xs mt-1 text-[#87897b]">For the love of the collection.</p></div>
@@ -258,6 +281,7 @@
   <script src="https://js.stripe.com/dahlia/stripe.js"></script>
   <script src="checkout-config.js"></script>
   <script src="checkout-client.js"></script>
+  <script src="loot-boxes.js"></script>
   <script>
     const catalog = [
       {
