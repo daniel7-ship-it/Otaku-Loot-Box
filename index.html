@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#f8f6f0">
+  <meta name="description" content="Discover anime figures, plushies, and fandom accessories for your shelf at Otaku Loot Box.">
+  <link rel="canonical" href="https://otakulootbox.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Otaku Loot Box — Find your next obsession">
+  <meta property="og:description" content="Discover anime figures, plushies, and fandom accessories for your shelf.">
+  <meta property="og:url" content="https://otakulootbox.com/">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230d3766' stroke='%235cc8f2' stroke-width='3'/%3E%3Cpath d='M14 25 32 17l18 8-18 8z' fill='%23e6a45d' stroke='%23ffd58a' stroke-width='2'/%3E%3Cpath d='M14 25v20l18 9 18-9V25L32 33z' fill='%23a85d32' stroke='%23ffd58a' stroke-width='2'/%3E%3Cpath d='M32 33v21M24 29l8 4 8-4' fill='none' stroke='%23753d25' stroke-width='2'/%3E%3Cpath d='m32 23 2 5 5 .3-4 3.2 1.3 5-4.3-2.7-4.3 2.7 1.3-5-4-3.2 5-.3z' fill='%23ffe05c' stroke='%23ff9f2e' stroke-width='1'/%3E%3C/svg%3E">
   <title>OTAKU LOOT BOX — Find your next obsession.</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -12,6 +18,13 @@
     :root{--ink:#263a30;--yellow:#f5d65d;--paper:#f8f6f0;--wood:#dcc09a}
     *{box-sizing:border-box}
     body{margin:0;background:var(--paper);color:var(--ink);font-family:'DM Sans',sans-serif}
+    #shop .catalog-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:2rem;min-width:0}
+    #shop .catalog-layout>*{min-width:0;max-width:100%}
+    #shop .category-scroller{min-width:0;max-width:100%;overscroll-behavior-x:contain}
+    #shop #products{min-width:0;grid-template-columns:repeat(1,minmax(0,1fr))}
+    @media(min-width:420px){#shop #products{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(min-width:1024px){#shop .catalog-layout{grid-template-columns:205px minmax(0,1fr);gap:2.5rem}#shop #products{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(min-width:1280px){#shop #products{grid-template-columns:repeat(3,minmax(0,1fr))}}
     button,input,select{font:inherit}
     button,a,input,select{touch-action:manipulation}
     button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #a47713;outline-offset:4px}
@@ -63,23 +76,20 @@
 
   <div class="bg-[#293b31] text-[#fff9df] px-4 py-2 text-center text-[11px] tracking-[.12em]">
     A LITTLE ESCAPE. A LOT OF LOOT. <span class="hidden sm:inline mx-3 opacity-40">/</span>
-    <span class="hidden sm:inline">MANGA · COMICS · COLLECTIBLES</span>
+    <span class="hidden sm:inline">ANIME · FIGURES · PLUSH · FAN ACCESSORIES</span>
   </div>
 
   <header class="bg-[#fffdf7]/95 border-b border-[#ded8cb] sticky top-0 z-30">
     <div class="max-w-[1440px] mx-auto px-5 lg:px-12 h-24 flex items-center justify-between gap-6">
       <a href="#" aria-label="Otaku Loot Box home" class="px-0 py-0 text-center leading-none shrink-0">
-        <span class="block w-[118px] h-[80px] overflow-hidden rounded-full">
-          <img src="logo.png" alt="Otaku Loot Box" class="block w-full h-full object-cover object-center scale-[1.30]" />
+        <span class="block w-[152px] h-[84px] overflow-hidden shrink-0">
+          <img src="logo-storefront.png" alt="Otaku Loot Box" onerror="this.hidden=true;this.nextElementSibling.hidden=false" class="block w-full h-full object-cover object-center scale-[1.30]" />
+          <span hidden class="w-full h-full bg-[#293b31] text-[#fff9df] display font-bold text-sm tracking-[.1em] flex items-center justify-center text-center px-3">OTAKU<br>LOOT BOX</span>
         </span>
       </a>
       <nav aria-label="Main navigation" class="hidden md:flex gap-7 text-sm font-semibold">
         <a href="#shop" data-nav-category="All loot" class="hover:text-[#9c742a]">All loot</a>
-        <a href="#shop" data-nav-category="Manga" class="hover:text-[#9c742a]">Manga</a>
         <a href="#shop" data-nav-category="Anime" class="hover:text-[#9c742a]">Anime</a>
-        <a href="#shop" data-nav-category="Comics" class="hover:text-[#9c742a]">Comics</a>
-        <a href="#shop" data-nav-category="Marvel" class="hover:text-[#9c742a]">Marvel</a>
-        <a href="#shop" data-nav-category="DC" class="hover:text-[#9c742a]">DC</a>
         <a href="#shop" data-nav-category="Figures" class="hover:text-[#9c742a]">Figures & collectibles</a>
         <a href="#shop" data-nav-category="Plushies" class="hover:text-[#9c742a]">Plushies</a>
       </nav>
@@ -102,7 +112,7 @@
           <h1 class="display text-[68px] sm:text-[88px] leading-[.94] font-semibold tracking-[-.02em] mt-7">
             Find your next<br><span class="relative">obsession.<span class="absolute -bottom-2 left-0 w-full h-2 bg-[#f5d65d] -z-10"></span></span>
           </h1>
-          <p class="text-[#6f7469] text-sm sm:text-base leading-7 max-w-sm mt-7">One more volume. That perfect figure.<br>A whole new world for your shelf.</p>
+          <p class="text-[#6f7469] text-sm sm:text-base leading-7 max-w-sm mt-7">One more collectible. That perfect figure.<br>Something new for your shelf.</p>
           <a href="#shop" class="inline-flex items-center gap-8 bg-[#293d31] text-white px-6 py-4 mt-8 text-sm font-semibold hover:bg-[#405441] transition">
             Discover your loot <svg class="w-5 h-5"><use href="#i-arrow"/></svg>
           </a>
@@ -134,25 +144,25 @@
         <span class="hidden sm:block text-xs text-[#75796d]">A little something for every fandom.</span>
       </div>
 
-      <div class="grid lg:grid-cols-[205px_1fr] gap-8 lg:gap-10">
+      <div class="catalog-layout grid lg:grid-cols-[205px_minmax(0,1fr)] gap-8 lg:gap-10">
         <aside aria-label="Product filters">
           <h3 class="text-[10px] font-bold tracking-[.17em] mb-4">EXPLORE THE SHELVES</h3>
-          <div id="categories" class="flex overflow-auto gap-2 lg:block lg:space-y-1 pb-2"></div>
-          <div class="mt-7 pt-6 border-t border-[#ded9cd] hidden lg:block">
+          <div id="categories" class="category-scroller flex flex-nowrap overflow-x-auto gap-2 lg:block lg:space-y-1 pb-2"></div>
+          <div class="mt-7 pt-6 border-t border-[#ded9cd]">
             <h3 class="text-[10px] font-bold tracking-[.17em] mb-4">YOUR BUDGET</h3>
             <label for="price" class="flex justify-between text-xs mb-3"><span>Up to</span><span id="priceLabel">$100</span></label>
             <input id="price" type="range" min="10" max="100" value="100" step="5" class="w-full accent-[#344b37]">
             <button id="resetFilters" class="text-xs underline underline-offset-4 mt-3 text-[#727667]">Reset filters</button>
           </div>
-          <div class="hidden lg:block wood p-5 mt-8 border border-[#c6aa80]">
+          <div class="wood p-5 mt-8 border border-[#c6aa80]">
             <span class="text-2xl">✳</span>
-            <h3 class="display text-2xl font-semibold mt-3">Start a new chapter.</h3>
-            <p class="text-xs leading-5 mt-2 text-[#5b5948]">The best adventures start with volume one.</p>
-            <button id="starterFilter" class="text-xs font-bold mt-4 underline underline-offset-4">Browse manga →</button>
+            <h3 class="display text-2xl font-semibold mt-3">Find a shelf favorite.</h3>
+            <p class="text-xs leading-5 mt-2 text-[#5b5948]">Explore current finds priced at $50 or less.</p>
+            <button id="starterFilter" class="text-xs font-bold mt-4 underline underline-offset-4">Browse finds under $50 →</button>
           </div>
         </aside>
 
-        <div>
+        <div class="catalog-content min-w-0">
           <div class="flex flex-wrap justify-between gap-3 items-center pb-5 mb-6 border-b border-[#ded9cd]">
             <label class="flex items-center gap-2 flex-1 min-w-[150px] max-w-xs">
               <svg class="w-4 h-4 shrink-0"><use href="#i-search"/></svg>
@@ -248,6 +258,7 @@
         name: "Giyu Tomioka Battle Version Figure",
         detail: "Demon Slayer · 29 cm PVC collectible statue",
         category: "Figures",
+        tags: ["Anime", "Demon Slayer"],
         price: 67.20,
         label: "NEW FIND",
         image: "https://i.etsystatic.com/66855924/r/il/7ba67b/8314544519/il_794xN.8314544519_rb8n.jpg",
@@ -266,6 +277,7 @@
         name: "Toji Fushiguro",
         detail: "Jujutsu Kaisen · 22 cm PVC figure",
         category: "Figures",
+        tags: ["Anime", "Jujutsu Kaisen"],
         price: 58.18,
         label: "NEW FIND",
         image: "https://i.etsystatic.com/63413437/r/il/facca5/8067201285/il_794xN.8067201285_r0uq.jpg"
@@ -273,8 +285,9 @@
       {
         id: 12,
         name: "Anime Embroidered Keychain Jet Tag",
-        detail: "Embroidered accessory · Jinx jet tag",
+        detail: "Arcane / League of Legends · Jinx embroidered jet tag",
         category: "Accessories",
+        tags: ["Arcane", "League of Legends"],
         price: 17.89,
         label: "NEW FIND",
         image: "https://i.etsystatic.com/43931911/r/il/14c579/6407823580/il_794xN.6407823580_nuib.jpg",
@@ -285,7 +298,7 @@
           "https://i.etsystatic.com/43931911/r/il/ae4949/6407823594/il_794xN.6407823594_g4ew.jpg",
           "https://i.etsystatic.com/43931911/r/il/ec1e5c/6455913317/il_794xN.6455913317_l6oy.jpg"
         ],
-        description: "A colorful embroidered anime jet tag keychain accessory.",
+        description: "An embroidered Jinx jet tag inspired by Arcane and League of Legends.",
         sourceUrl: "https://www.etsy.com/listing/1821496421/anime-keychain-embroidered-jet-tag"
       },
       {
@@ -293,6 +306,7 @@
         name: "Kurapika Judgment Chain Necklace",
         detail: "Hunter x Hunter · brass cosplay jewelry",
         category: "Accessories",
+        tags: ["Anime", "Hunter x Hunter"],
         price: 5.60,
         label: "NEW FIND",
         image: "https://i.etsystatic.com/63777588/r/il/c9cf18/7940217167/il_794xN.7940217167_8euk.jpg",
@@ -311,6 +325,7 @@
         name: "Valorant Champions Karambit",
         detail: "Metal display prop · Karambit only",
         category: "Accessories",
+        tags: ["Valorant"],
         price: 29.99,
         label: "NEW FIND",
         image: "https://i.etsystatic.com/12207174/r/il/b97d9e/6980488180/il_794xN.6980488180_g7gl.jpg",
@@ -329,6 +344,7 @@
         name: "Re:Zero Rem & Emilia Figure",
         detail: "Re:Zero · 24 cm PVC and ABS statue",
         category: "Figures",
+        tags: ["Anime", "Re:Zero"],
         price: 69.90,
         label: "NEW FIND",
         image: "https://i.etsystatic.com/55102251/r/il/8c14bc/7036192014/il_794xN.7036192014_d6p3.jpg",
@@ -347,6 +363,7 @@
         name: "Gojo & Geto Sitting Figures",
         detail: "Jujutsu Kaisen · PVC desk collectibles",
         category: "Figures",
+        tags: ["Anime", "Jujutsu Kaisen"],
         price: 35.55,
         label: "NEW FIND",
         image: "https://i.etsystatic.com/63413437/r/il/3fa345/8489306675/il_794xN.8489306675_rqyi.jpg",
@@ -365,6 +382,7 @@
         name: "Pirate Crew Plushies",
         detail: "Fabric plush collection · Choose your crew member",
         category: "Plushies",
+        tags: ["Anime"],
         price: 36.99,
         label: "NEW FIND",
         image: "https://i.etsystatic.com/65282119/r/il/83ba51/8304021994/il_794xN.8304021994_c555.jpg",
@@ -382,6 +400,7 @@
         name: "Power Sitting Plush",
         detail: "Chainsaw Man · 7-inch sitting plush",
         category: "Plushies",
+        tags: ["Anime", "Chainsaw Man"],
         price: 24.99,
         label: "NEW FIND",
         image: "https://img.kwcdn.com/local-goods-image/596b78ae/7901550d-705d-43af-9c98-096efc01fa93.jpeg",
@@ -451,16 +470,21 @@
       </div>`;
     }
 
+    function matchesCategory(product,value){
+      if(value==="All loot")return true;
+      return product.category===value||(product.tags||[]).includes(value);
+    }
+
     function renderCategories(){
-      $("categories").innerHTML=["All loot","Manga","Anime","Comics","Marvel","DC","Figures","Plushies","Accessories"].map(c=>`
+      $("categories").innerHTML=["All loot","Anime","Arcane","Valorant","Figures","Plushies","Accessories"].map(c=>`
         <button data-category="${c}" aria-pressed="${category===c}" class="filter-btn ${category===c?"active":""} shrink-0 w-auto lg:w-full flex items-center justify-between gap-5 px-3 py-3 text-xs rounded-sm hover:bg-[#eee6d7] transition">
-          <span>${c}</span><span class="filter-count bg-[#ece9df] px-1.5 py-0.5 rounded text-[10px]">${c==="All loot"?catalog.length:catalog.filter(p=>p.category===c).length}</span>
+          <span>${c}</span><span class="filter-count bg-[#ece9df] px-1.5 py-0.5 rounded text-[10px]">${catalog.filter(p=>matchesCategory(p,c)).length}</span>
         </button>`).join("");
     }
 
     function renderProducts(){
       const query=$("search").value.trim().toLowerCase();
-      const items=catalog.filter(p=>(category==="All loot"||p.category===category)&&p.price<=Number($("price").value)&&`${p.name} ${p.detail} ${p.category}`.toLowerCase().includes(query));
+      const items=catalog.filter(p=>matchesCategory(p,category)&&p.price<=Number($("price").value)&&`${p.name} ${p.detail} ${p.category} ${(p.tags||[]).join(" ")}`.toLowerCase().includes(query));
       if($("sort").value==="low")items.sort((a,b)=>a.price-b.price);
       if($("sort").value==="high")items.sort((a,b)=>b.price-a.price);
       if($("sort").value==="name")items.sort((a,b)=>a.name.localeCompare(b.name));
@@ -470,9 +494,8 @@
       const pageItems=items.slice(start,start+PAGE_SIZE);
       $("resultCount").textContent=`${items.length} finds`;
       $("emptyResults").hidden=items.length>0;
-      const isPlushiesShelf=category==="Plushies"&&!query&&Number($("price").value)===100;
-      $("emptyTitle").textContent=isPlushiesShelf?"Plushies are coming soon.":"No loot on this shelf.";
-      $("emptyCopy").textContent=isPlushiesShelf?"We’re picking the first soft additions for the collection. Check back soon.":"Try another title or reset your filters.";
+      $("emptyTitle").textContent="No loot on this shelf.";
+      $("emptyCopy").textContent="Try another title or reset your filters.";
       $("pagination").hidden=items.length<=PAGE_SIZE;
       $("pageStatus").textContent=items.length?`Page ${catalogPage} of ${totalPages}`:"";
       $("previousPage").disabled=catalogPage===1;
@@ -497,6 +520,7 @@
 
     function setCategory(value){category=value;catalogPage=1;renderCategories();renderProducts()}
     function reset(){category="All loot";catalogPage=1;$("price").value=100;$("priceLabel").textContent="$100";$("search").value="";$("sort").value="featured";renderCategories();renderProducts()}
+    function browseBudget(){category="All loot";catalogPage=1;$("price").value=50;$("priceLabel").textContent="$50";$("search").value="";$("sort").value="featured";renderCategories();renderProducts();$("products").scrollIntoView({behavior:"smooth",block:"start"})}
     function notify(message){$("toast").textContent=message;$("toast").classList.remove("opacity-0");clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").classList.add("opacity-0"),2400)}
     function persist(){try{localStorage.setItem("otaku-loot-cart-v1",JSON.stringify(cart))}catch{}}
 
@@ -556,7 +580,7 @@
 
     $("categories").addEventListener("click",e=>{const b=e.target.closest("[data-category]");if(b)setCategory(b.dataset.category)});
     document.querySelectorAll("[data-nav-category]").forEach(a=>a.addEventListener("click",()=>setCategory(a.dataset.navCategory)));
-    $("starterFilter").onclick=()=>setCategory("Manga");
+    $("starterFilter").onclick=browseBudget;
     $("resetFilters").onclick=reset;
     $("emptyReset").onclick=reset;
     $("search").addEventListener("input",()=>{catalogPage=1;renderProducts()});
